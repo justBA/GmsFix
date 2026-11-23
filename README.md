@@ -15,7 +15,7 @@ App Android giúp **thông báo (FCM) không bị HyperOS chặn**: không bị 
 | Nguyên nhân | Hậu quả |
 |---|---|
 | **Greezer** (bộ đóng băng của `miui-services`) đóng băng app nền, và đóng băng cả GMS (GMS nằm cứng trong `greezer_power_black_list`) | Mất kết nối FCM, tin tới app bị giữ lại |
-| **Sleep mode** ban đêm (~01:00–05:30, chỉ ROM CN) đóng băng cả app trong danh sách No Restrictions | Mất tin ban đêm. Muốn sửa tận gốc thì cần root |
+| **Sleep mode** ban đêm (~01:00–05:30, chỉ ROM CN) đóng băng cả app trong danh sách No Restrictions **và cắt mạng** (`cloud_sleepmode_networkpolicy_enabled=on`) | FCM mất kết nối hàng giờ, tin tới dồn lúc sáng. Đang thử khắc phục bằng tuỳ chọn *Ban đêm* (xem phần Đang thử nghiệm) |
 | **Deep doze rất gắt**: tắt màn hình là Quick Doze, ngủ sâu sau ~1 phút, khoảng thức gom tin 1 → 6 giờ | Tin ưu tiên thường bị máy chủ giữ lại tới 1–6 giờ |
 | **Vuốt app khỏi đa nhiệm = force-stop** (`SwipeUpClean`, `OneKeyClean`, `GameClean`) | App bị dừng hẳn, GMS bỏ tin (`Failed to broadcast to stopped app`) cho tới khi mở lại app |
 | **PowerKeeper** ghi đè `MILLET_NO_RESTRICT_APP` từ cài đặt pin mỗi khi khởi động lại hoặc đổi chế độ pin | Các thiết lập ghi bằng lệnh bị mất |
@@ -46,6 +46,7 @@ Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riên
   - **Tự ghi lại nếu bị đổi**: cloud hoặc HyperOS đổi lại thì app tự ghi lại.
   - **Mọi app có FCM** (mặc định bật): ngoài danh sách đã chọn, thêm mọi app có receiver c2dm. App mới cài tự được thêm. Bấm "xem ›" để xem danh sách.
 - **Nới deep doze**: Settings.Global `device_idle_constants`. Ngủ sâu sau 2 phút, thức gom tin mỗi 15 → 30 phút. Tin ưu tiên thường trễ tối đa ~30 phút, thay vì 1–6 giờ. Nút ⓘ cho xem giá trị đang dùng và giá trị mặc định của HyperOS.
+- **Ban đêm (sleep mode)** (mặc định bật, đang thử nghiệm): đặt `cloud_sleepmode_networkpolicy_enabled=off` để không cắt mạng khi ngủ, và thêm Google Play services + GMS Fix vào `cloud_aurogon_alarm_allow_list` để alarm heartbeat/đánh thức được đi qua khi đang bị đóng băng. Ghi cần Shizuku. Khoá `cloud_` có thể bị Xiaomi đặt lại, Kiểm tra cài đặt sẽ báo.
 
 **Cảnh báo** (mỗi loại bật/tắt riêng, áp dụng cho app trong danh sách và mọi app có FCM):
 - **Mất thông báo**: GMS bỏ tin vì app đang bị dừng.
@@ -64,10 +65,11 @@ Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riên
 5. Cho phép chạy nền
 6. Dữ liệu nền
 7. Standby bucket
-8. Tự khởi chạy (MIUI appop 10008)
+8. Tự khởi chạy (MIUI appop 10008 + 10053, công tắc)
 9. Cấp quyền cho GMS Fix (`WRITE_SECURE_SETTINGS`, `DUMP`, usage access, exact alarm)
 10. **Bỏ trạng thái dừng** cho app trong danh sách và mọi app có FCM
-11. Kiểm tra lại
+11. Ban đêm (sleep mode), nếu bật
+12. Kiểm tra lại
 
 Xong thì app tự tắt Developer options, nếu tuỳ chọn đó đang bật.
 
@@ -89,6 +91,23 @@ Tạo file `.mtz` ẩn (`Download/GmsFix-FCM.mtz`) để ghi đè `theme_values.
 - Quick Doze bỏ qua `inactive_to` và motion. `quick_doze_delay_to` có tác dụng nhưng bị giới hạn ~2 phút. `idle_to`/`max_idle_to` có tác dụng.
 - Shizuku 13.6 trên ROM này **không lưu** lựa chọn "Allow all the time", nên mỗi lần Fix có thể phải bấm Allow lại.
 - Tự khởi chạy **không** cứu được app đã bị dừng hẳn, vì GMS tự bỏ tin trước. Nó chỉ cần cho app bị giết tiến trình nhưng không bị force-stop.
+- MIUI appop `10053` là trạng thái công tắc Tự khởi chạy. Fix đặt cùng `10008`. Trước khi sửa, 24 app bị lệch (10008 cho phép, 10053 chặn).
+- Exit-info của máy: **SwipeUpClean 202, OneKeyClean 145, GameClean 108** lần force-stop. Vuốt đóng app, "dọn tất cả" và Game Turbo đều force-stop thật.
+- Sleep mode đêm 23→24/11: `SLEEP_MODE enter/exit` (01:15–03:54, 04:15–05:30) **khớp chính xác** với GMS `ERR_NET_DOWN`. Sleep mode cũng đóng băng chính GMS Fix (uid riêng), nên "Đánh thức GMS" gần như không chạy được cả đêm.
+- Broadcast heartbeat (`GTALK_HEARTBEAT`, `MCS_HEARTBEAT`) **không ổn định**: một lần trùng với heartbeat, thử lại 3 lần không có tác dụng. Không dùng.
+- Tin của app chat bị cập nhật im lặng (Zalo gộp tin trong ~10 giây, KChat `onlyAlertOnce`, Instagram `groupAlertBehavior=SUMMARY`) là do app, không phải do máy.
+
+---
+
+## Đang thử nghiệm
+
+| Thử nghiệm | Đã làm | Kết quả tới giờ | Trạng thái |
+|---|---|---|---|
+| **GMS + GMS Fix vào `cloud_aurogon_alarm_allow_list`** | Ghi bằng adb 23/11 lúc 23:2x (giữ 3 mục mặc định của ROM). Ngày 24/11 đưa vào app | ✅ **Có tác dụng**: 05:20 ngày 24/11, GMS được mở băng với lý do `alarm`, lần đầu tiên thấy (trước đó 0 lần). Nhưng lúc đó mạng đang bị sleep mode cắt nên chưa nối lại được | Đã vào app (tuỳ chọn *Ban đêm*). Còn chờ đo thêm |
+| **Tắt cắt mạng khi sleep mode** (`cloud_sleepmode_networkpolicy_enabled=off`) | Ghi bằng adb 24/11 lúc 05:5x, đưa vào app cùng tuỳ chọn *Ban đêm* | ⏳ Chưa có kết quả. Chưa biết Greezer đọc giá trị ngay hay chỉ đọc lúc khởi động, và cloud có đặt lại không | Chờ đo đêm 24→25/11: còn `ERR_NET_DOWN` trong khung sleep mode không |
+| Danh sách giữ mạng khi sleep mode (`mSleepModeWhitelistUids` trong NetworkPolicy) | Đọc được, đang trống | ❌ Không có lệnh shell nào để thêm, PowerKeeper tự quản | Bỏ |
+| Chia 2 mức + "Mọi app có FCM" | Đưa vào app 23/11 | ✅ Messenger và Facebook bắt đầu bị đóng băng (trước đây 0 giây) mà vẫn nhận tin FCM. Danh sách mở băng có 116 app (~7 KB trong `aurogon_enable`) | ⏳ Chưa xác nhận Greezer đọc đủ 116 app: cần thấy app ngoài 34 app được mở băng `reason : broadcast` khi có tin |
+| Theme `.mtz` sửa danh sách của ROM | Tạo được file | ❌ App Themes kiểm tra DRM | Dừng, không vượt DRM |
 
 ---
 
@@ -121,6 +140,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 | `NoRestrictGuard` | 2 mức, `MILLET_NO_RESTRICT_APP`, mở trang cài đặt pin |
 | `BroadcastCtrl` | `aurogon_enable` / `broadcastctrl`, danh sách mọi app có FCM |
 | `DozeTune` | `device_idle_constants` (nới deep doze) |
+| `SleepGuard` | Ban đêm: `cloud_sleepmode_networkpolicy_enabled`, `cloud_aurogon_alarm_allow_list` |
 | `KeepAlive` | Báo thức đánh thức GMS định kỳ, tự áp dụng lại cài đặt |
 | `BootReceiver` | Áp dụng lại sau khi khởi động máy |
 | `FcmStatus` | Đọc `dumpsys GcmService`: kết nối, thống kê 24 giờ |
