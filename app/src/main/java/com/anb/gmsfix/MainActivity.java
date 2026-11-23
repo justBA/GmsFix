@@ -575,6 +575,27 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    /** Danh sách app có FCM được thêm tự động (ngoài danh sách đã chọn) vào mở băng khi có tin. */
+    private void showAutoFcmApps() {
+        PackageManager pm = getPackageManager();
+        Set<String> mine = getPkgs();
+        Set<String> off = getOff();
+        List<String> names = new ArrayList<>();
+        int skipped = 0;
+        for (String p : BroadcastCtrl.fcmApps(this)) {
+            if (mine.contains(p)) continue;
+            if (off.contains(p)) { skipped++; continue; }
+            names.add(HealthCheck.label(pm, p));
+        }
+        names.sort(String::compareToIgnoreCase);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(names.size() + " app thêm tự động")
+                .setMessage("Có tin FCM thì được mở băng (không cần chọn). Muốn Fix đầy đủ (tự khởi chạy, bỏ "
+                        + "trạng thái dừng…) thì thêm app vào danh sách.\n\n• " + String.join("\n• ", names))
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
     private void refreshBroadcastCtrl() {
         boolean wanted = BroadcastCtrl.wanted(this);
         swBcAuto.setEnabled(wanted);
@@ -582,8 +603,9 @@ public class MainActivity extends AppCompatActivity {
         boolean fcmMode = BroadcastCtrl.fcmOnly(this);
         findViewById(R.id.swBcAll).setEnabled(wanted && fcmMode);
         findViewById(R.id.row_swBcAll).setAlpha(wanted && fcmMode ? 1f : 0.5f);
-        ((TextView) findViewById(R.id.bcAllSub)).setText("Không chỉ app trong danh sách • "
-                + BroadcastCtrl.fcmApps(this).size() + " app có FCM");
+        TextView allSub = findViewById(R.id.bcAllSub);
+        allSub.setText("Không chỉ app trong danh sách • " + BroadcastCtrl.fcmApps(this).size() + " app có FCM • xem ›");
+        allSub.setOnClickListener(v -> showAutoFcmApps());
         bcStatus.setVisibility(View.VISIBLE);
         if (wanted) BroadcastCtrl.ensure(this);
         boolean applied = BroadcastCtrl.applied(this);
