@@ -465,6 +465,7 @@ public class MainActivity extends AppCompatActivity {
             ((TextView) row.findViewById(R.id.title)).setText(t.title);
             ((TextView) row.findViewById(R.id.sub)).setText(t.desc);
             MaterialSwitch sw = row.findViewById(R.id.toggle);
+            sw.setSaveEnabled(false); // các hàng dùng chung id → không để Android khôi phục đè trạng thái
             sw.setChecked(AlertCenter.enabled(this, t));
             sw.setOnCheckedChangeListener((b, on) -> AlertCenter.setEnabled(this, t, on));
             row.setOnClickListener(v -> sw.toggle());
@@ -717,6 +718,7 @@ public class MainActivity extends AppCompatActivity {
             ((TextView) header.findViewById(R.id.count)).setText(on + "/" + apps.size() + " đang bật");
             header.findViewById(R.id.chevron).setRotation(isCollapsed ? -90 : 0);
             MaterialSwitch gToggle = header.findViewById(R.id.toggle);
+            gToggle.setSaveEnabled(false); // id trùng giữa các nhóm: khôi phục trạng thái sẽ gạt tắt cả danh sách
             gToggle.setChecked(on > 0);
             gToggle.setOnCheckedChangeListener((b, checked) -> {
                 Set<String> o = getOff();
@@ -759,6 +761,7 @@ public class MainActivity extends AppCompatActivity {
                 boolean enabled = !off.contains(p);
                 row.setAlpha(enabled ? 1f : 0.5f);
                 MaterialSwitch toggle = row.findViewById(R.id.toggle);
+                toggle.setSaveEnabled(false); // id trùng giữa các hàng (xem gToggle)
                 toggle.setChecked(enabled);
                 toggle.setOnCheckedChangeListener((b, checked) -> {
                     Set<String> o = getOff();
