@@ -6,6 +6,8 @@ App Android giúp **thông báo (FCM) không bị HyperOS chặn**: không bị 
 - Máy thử nghiệm: Xiaomi `popsicle` (2509FPN0BC), HyperOS OS4.0 CN, Android 17, không root
 - Ràng buộc: bình thường **Developer options phải tắt** (để app ngân hàng và VNeID chạy được). Shizuku chỉ bật khi cần bấm **Fix ngay**.
 
+> ☕ App giúp được bạn? [Mời mình ly cà phê](#-mời-mình-ly-cà-phê) nha!
+
 ---
 
 ## Vì sao thông báo bị mất hoặc trễ trên HyperOS CN
@@ -139,3 +141,19 @@ git checkout <commit> -- . # lấy lại mã nguồn ở một mốc
 ```
 
 Mốc `cd2e715` là bản ổn định trước khi chia 2 mức.
+
+---
+
+## ☕ Mời mình ly cà phê
+
+Nếu GMS Fix giúp bạn không còn lỡ tin nhắn, có thể mời mình ly cà phê để mình có động lực làm tiếp 🙏
+
+<p align="center">
+  <img src="docs/donate-acb.png" alt="QR chuyển khoản ACB" width="280">
+</p>
+
+| Ngân hàng | Chủ tài khoản | Số tài khoản |
+|---|---|---|
+| **ACB** | NGUYEN BINH AN | `20039987` |
+
+Quét QR bằng app ngân hàng bất kỳ (VietQR / Napas 247). Cảm ơn bạn rất nhiều! ❤️
