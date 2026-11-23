@@ -133,7 +133,7 @@ final class HealthCheck {
 
         String appops = "", doze = "", netpolicy = "", notif = "";
         if (hasDump) {
-            appops = sh("dumpsys appops | grep -E '^    Package |MIUIOP\\(10008\\)|RUN_ANY_IN_BACKGROUND'");
+            appops = sh("dumpsys appops | grep -E '^    Package |MIUIOP\\(10008\\)|MIUIOP\\(10053\\)|RUN_ANY_IN_BACKGROUND'");
             doze = sh("dumpsys deviceidle whitelist");
             netpolicy = sh("dumpsys netpolicy");
             notif = sh("dumpsys notification | grep 'AppSettings:'");
@@ -166,7 +166,10 @@ final class HealthCheck {
             Map<String, String> o = ops.get(p);
             if (o != null) {
                 String auto = o.get("MIUIOP(10008)");
-                if (auto != null && !auto.equals("allow")) list.add(NO_AUTOSTART);
+                String autoSw = o.get("MIUIOP(10053)"); // công tắc Tự khởi chạy (có thể không có trên ROM khác)
+                if ((auto != null && !auto.equals("allow")) || (autoSw != null && !autoSw.equals("allow"))) {
+                    list.add(NO_AUTOSTART);
+                }
                 String bg = o.get("RUN_ANY_IN_BACKGROUND");
                 if (bg != null && (bg.equals("ignore") || bg.equals("deny"))) list.add(NO_BG);
             }

@@ -122,7 +122,9 @@ final class Steps {
         List<String> autostart = new ArrayList<>(pkgs);
         autostart.add(selfPkg); // để nhận BOOT_COMPLETED trên MIUI/HyperOS
         steps.add(new Step("MIUI tự khởi chạy",
-                forEach(autostart, "cmd appops set %1$s 10008 allow && echo \"%1$s: allow\""), true));
+                forEach(autostart, "cmd appops set %1$s 10008 allow && echo \"%1$s: allow\""
+                        // 10053 = trạng thái công tắc Tự khởi chạy; đặt cùng 10008 để Bảo mật không đặt lại theo công tắc
+                        + " && { cmd appops set %1$s 10053 allow 2>/dev/null || true; }"), true));
 
         steps.add(new Step("Cấp quyền cho GMS Fix",
                 "pm grant " + selfPkg + " " + Manifest.permission.WRITE_SECURE_SETTINGS + " && echo 'WRITE_SECURE_SETTINGS' && "
