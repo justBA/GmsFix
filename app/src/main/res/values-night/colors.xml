@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ok">#81C995</color>
+    <color name="err">#F28B82</color>
+    <color name="warn">#FDD663</color>
+    <color name="neutral">#BDC1C6</color>
+    <color name="widget_bg">#202124</color>
+    <color name="widget_text">#E8EAED</color>
+    <color name="widget_sub">#9AA0A6</color>
+    <color name="widget_btn">#8AB4F8</color>
+    <color name="widget_btn_text">#202124</color>
+</resources>
