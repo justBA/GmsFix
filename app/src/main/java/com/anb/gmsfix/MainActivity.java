@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         btnKaInterval.setOnClickListener(v -> chooseKaInterval());
 
         for (int[] rs : new int[][]{{R.id.row_swAutoOff, R.id.swAutoOff}, {R.id.row_swRemind, R.id.swRemind},
-                {R.id.row_swKeepAlive, R.id.swKeepAlive}, {R.id.row_swBcCtrl, R.id.swBcCtrl}, {R.id.row_swBcAuto, R.id.swBcAuto}, {R.id.row_swBcAll, R.id.swBcAll}, {R.id.row_swDoze, R.id.swDoze}}) {
+                {R.id.row_swKeepAlive, R.id.swKeepAlive}, {R.id.row_swBcCtrl, R.id.swBcCtrl}, {R.id.row_swBcAuto, R.id.swBcAuto}, {R.id.row_swBcAll, R.id.swBcAll}, {R.id.row_swDoze, R.id.swDoze}, {R.id.row_swNight, R.id.swNight}}) {
             MaterialSwitch target = findViewById(rs[1]);
             findViewById(rs[0]).setOnClickListener(v -> { if (target.isEnabled()) target.toggle(); });
         }
@@ -218,6 +218,30 @@ public class MainActivity extends AppCompatActivity {
         dozeStatus = findViewById(R.id.dozeStatus);
         dozeValues = findViewById(R.id.dozeValues);
         findViewById(R.id.btnDozeInfo).setOnClickListener(v -> showDozeInfo());
+        MaterialSwitch swNight = findViewById(R.id.swNight);
+        swNight.setChecked(SleepGuard.wanted(this));
+        swNight.setOnCheckedChangeListener((b, on) -> {
+            prefs.edit().putBoolean(SleepGuard.PREF_ON, on).apply();
+            ((TextView) findViewById(R.id.nightStatus)).setText("Đang áp dụng…");
+            new Thread(() -> {
+                String err = SleepGuard.applyNow(this, on);
+                main.post(() -> {
+                    if (err != null) toast("Ban đêm: " + err);
+                    refreshNight();
+                });
+            }).start();
+        });
+        findViewById(R.id.btnNightInfo).setOnClickListener(v -> new MaterialAlertDialogBuilder(this)
+                .setTitle("Ban đêm (sleep mode)")
+                .setMessage("ROM CN có sleep mode ban đêm (khoảng 01:00–05:30, máy để yên): đóng băng cả app "
+                        + "No Restrictions và CẮT MẠNG → FCM mất kết nối, tin tới dồn lúc sáng.\n\n"
+                        + "Bật:\n• " + SleepGuard.NET_KEY + " = off (không cắt mạng khi ngủ)\n• thêm Google Play "
+                        + "services + GMS Fix vào " + SleepGuard.ALARM_KEY + " (alarm heartbeat/đánh thức được "
+                        + "đi qua khi đang bị đóng băng)\n\nGhi cần Shizuku (Fix ngay). Khoá \"cloud_\" có thể bị "
+                        + "Xiaomi đặt lại — app sẽ báo trong Kiểm tra cài đặt. Tốn pin ban đêm hơn chút.\n\n"
+                        + "Hiện tại: " + SleepGuard.status(this))
+                .setPositiveButton("OK", null)
+                .show());
         swDoze.setChecked(DozeTune.wanted(this));
         swDoze.setOnCheckedChangeListener((b, on) -> {
             prefs.edit().putBoolean(DozeTune.PREF_ON, on).remove("dozeReapplyCount").apply();
@@ -279,6 +303,7 @@ public class MainActivity extends AppCompatActivity {
         refreshHealth();
         refreshBroadcastCtrl();
         refreshDoze();
+        refreshNight();
         maybeContinueAutoFix();
     }
 
@@ -547,6 +572,17 @@ public class MainActivity extends AppCompatActivity {
                 dozeStatus.setVisibility(status.isEmpty() ? View.GONE : View.VISIBLE);
             });
         }).start();
+    }
+
+    private void refreshNight() {
+        boolean wanted = SleepGuard.wanted(this);
+        boolean ok = SleepGuard.applied(this);
+        ((TextView) findViewById(R.id.nightValues)).setText(SleepGuard.status(this));
+        TextView st = findViewById(R.id.nightStatus);
+        String s = wanted ? (ok ? "✓ Đang áp dụng" : "⚠ Chưa có hiệu lực • bấm Fix ngay (cần Shizuku)")
+                : (ok ? "⚠ Đang tắt trong app nhưng hệ thống vẫn giữ" : "");
+        st.setText(s);
+        st.setVisibility(s.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     private void showDozeInfo() {
@@ -975,7 +1011,8 @@ public class MainActivity extends AppCompatActivity {
             List<Steps.Step> steps = Steps.build(pkgs, NoRestrictGuard.alwaysOn(this),
                     NoRestrictGuard.targetValue(this), getPackageName(),
                     BroadcastCtrl.wanted(this) && BroadcastCtrl.allFcm(this)
-                            ? BroadcastCtrl.fcmApps(this) : java.util.Collections.emptySet());
+                            ? BroadcastCtrl.fcmApps(this) : java.util.Collections.emptySet(),
+                    SleepGuard.wanted(this) ? SleepGuard.applyScript(this) : null);
             List<View> rows = new ArrayList<>();
             main.post(() -> {
                 fullLog.setLength(0);

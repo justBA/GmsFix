@@ -184,6 +184,13 @@ final class HealthCheck {
 
             if (!list.isEmpty()) r.issues.put(p, list);
         }
+        // Ban đêm (sleep mode): gắn vào mục Google Play services
+        if (SleepGuard.wanted(ctx)) {
+            List<String> night = new ArrayList<>();
+            if (!SleepGuard.netOk(ctx)) night.add(SleepGuard.ISSUE_NET);
+            if (!SleepGuard.alarmOk(ctx)) night.add(SleepGuard.ISSUE_ALARM);
+            if (!night.isEmpty()) r.issues.computeIfAbsent(Steps.GMS, k -> new ArrayList<>()).addAll(night);
+        }
         return r;
     }
 

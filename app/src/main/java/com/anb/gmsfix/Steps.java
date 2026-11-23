@@ -48,7 +48,7 @@ final class Steps {
      * @param noRestrictValue giá trị MILLET_NO_RESTRICT_APP mới (NoRestrictGuard.targetValue), null = không cần đổi
      */
     static List<Step> build(Collection<String> pkgs, Collection<String> alwaysOn, String noRestrictValue, String selfPkg,
-                            Collection<String> unstopAlso) {
+                            Collection<String> unstopAlso, String nightScript) {
         List<Step> steps = new ArrayList<>();
 
         // GMS Fix cũng cần được miễn hạn chế để KeepAlive (đánh thức GMS định kỳ) chạy được khi tắt màn hình
@@ -148,6 +148,9 @@ final class Steps {
         }
         us.append("[ $rc = 0 ] && echo 'Không app nào bị dừng'\nexit $rc");
         steps.add(new Step("Bỏ trạng thái dừng (stopped)", us.toString(), false));
+
+        // Ban đêm (sleep mode): không cắt mạng + alarm của GMS/GMS Fix được đi qua (SleepGuard)
+        if (nightScript != null) steps.add(new Step("Ban đêm (sleep mode)", nightScript, false));
 
         steps.add(new Step("Kiểm tra lại", verifyScript(pkgs, alwaysOn), false));
         return steps;
