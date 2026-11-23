@@ -58,6 +58,11 @@ final class AlertCenter {
 
     static final String CHANNEL = "alerts";
     static final long DELAY_THRESHOLD_MS = 2 * 60 * 1000L;
+    /**
+     * Tin ưu tiên thường: máy chủ giữ lại khi máy ngủ sâu tới lần thức kế tiếp (Nới deep doze: tối đa 30 phút)
+     * → trễ trong mức đó là đúng thiết kế, chỉ ghi khi vượt 35 phút.
+     */
+    static final long NORMAL_DELAY_THRESHOLD_MS = 35 * 60 * 1000L;
     private static final int HISTORY_MAX = 200;
     private static final int SEEN_MAX = 300;
 
@@ -113,7 +118,7 @@ final class AlertCenter {
             String line = HealthCheck.label(pm, pkg) + ": trễ " + (ms / 60000) + " phút (nguyên nhân "
                     + cause(m.group(6)) + ", lúc " + m.group(1) + " UTC)";
             if ("HIGH".equals(m.group(4))) delayed.add(line);
-            else delayedQuiet.add(line);
+            else if (ms > NORMAL_DELAY_THRESHOLD_MS) delayedQuiet.add(line);
         }
 
         List<String> s = new ArrayList<>(seen);
