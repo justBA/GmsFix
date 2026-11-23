@@ -973,7 +973,9 @@ public class MainActivity extends AppCompatActivity {
             List<String> pkgs = new ArrayList<>();
             for (String p : getEnabledPkgs()) if (PKG_NAME.matcher(p).matches()) pkgs.add(p);
             List<Steps.Step> steps = Steps.build(pkgs, NoRestrictGuard.alwaysOn(this),
-                    NoRestrictGuard.targetValue(this), getPackageName());
+                    NoRestrictGuard.targetValue(this), getPackageName(),
+                    BroadcastCtrl.wanted(this) && BroadcastCtrl.allFcm(this)
+                            ? BroadcastCtrl.fcmApps(this) : java.util.Collections.emptySet());
             List<View> rows = new ArrayList<>();
             main.post(() -> {
                 fullLog.setLength(0);

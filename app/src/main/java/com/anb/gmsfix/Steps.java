@@ -47,7 +47,8 @@ final class Steps {
      * @param alwaysOn app "Luôn chạy nền" (giữ trong No Restrictions); app còn lại trong pkgs là "Chỉ khi có tin"
      * @param noRestrictValue giá trị MILLET_NO_RESTRICT_APP mới (NoRestrictGuard.targetValue), null = không cần đổi
      */
-    static List<Step> build(Collection<String> pkgs, Collection<String> alwaysOn, String noRestrictValue, String selfPkg) {
+    static List<Step> build(Collection<String> pkgs, Collection<String> alwaysOn, String noRestrictValue, String selfPkg,
+                            Collection<String> unstopAlso) {
         List<Step> steps = new ArrayList<>();
 
         // GMS Fix cũng cần được miễn hạn chế để KeepAlive (đánh thức GMS định kỳ) chạy được khi tắt màn hình
@@ -135,7 +136,10 @@ final class Steps {
         // → GMS bỏ tin FCM ("Failed to broadcast to stopped app"). Chỉ gỡ cờ stopped cho app đang bị dừng
         // và đọc lại để xác nhận — thất bại thì báo lỗi, không che.
         StringBuilder us = new StringBuilder("rc=0\nisstop() { dumpsys package \"$1\" | grep -m1 -q 'stopped=true'; }\n");
-        for (String p : pkgs) {
+        // cả app có FCM ngoài danh sách ("Mọi app có FCM"): app bị dừng thì GMS bỏ tin, Greezer không cứu được
+        java.util.Set<String> unstop = new java.util.LinkedHashSet<>(pkgs);
+        for (String p : unstopAlso) if (p.matches("[A-Za-z0-9_.]+")) unstop.add(p);
+        for (String p : unstop) {
             us.append("if isstop ").append(p).append("; then cmd package unstop ").append(p).append(" >/dev/null 2>&1; ")
                     .append("if isstop ").append(p).append("; then echo '").append(p).append(": vẫn bị dừng — mở app 1 lần'; rc=1; ")
                     .append("else echo '").append(p).append(": đã bỏ trạng thái dừng'; fi; fi\n");
