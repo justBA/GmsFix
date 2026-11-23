@@ -75,7 +75,7 @@ Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riên
 
 Xong thì app tự tắt Developer options, nếu tuỳ chọn đó đang bật.
 
-**Sau khi khởi động lại máy:** app tự áp dụng lại phần Greezer (bằng quyền `DUMP`), `aurogon_enable` và doze, **không cần Shizuku**. Riêng Google Play services bị PowerKeeper xoá khỏi No Restrictions, nên app sẽ nhắc bấm Fix.
+**Sau khi khởi động lại máy:** app tự áp dụng lại phần Greezer (bằng quyền `DUMP`), `aurogon_enable`, doze và tắt Nighttime mode, **không cần Shizuku**. Riêng Google Play services bị PowerKeeper xoá khỏi No Restrictions, nên app sẽ nhắc bấm Fix.
 
 ### 2. Chỉnh bằng theme (thử nghiệm)
 
@@ -102,6 +102,27 @@ Tạo file `.mtz` ẩn (`Download/GmsFix-FCM.mtz`) để ghi đè `theme_values.
 
 ---
 
+### Tự kiểm tra mất mạng ban đêm trên máy khác
+
+Sáng hôm sau, cắm adb rồi chạy:
+
+```bash
+# PowerKeeper có tắt Wi‑Fi không (dòng CMD_WIFI_TOGGLED ... WorkSource{1000 com.miui.powerkeeper})
+adb shell dumpsys wifi | grep -E "CMD_WIFI_TOGGLED.*powerkeeper"
+# PowerKeeper có tắt dữ liệu di động không
+adb shell dumpsys activity service com.android.phone | grep -E "user data enabled.*powerkeeper"
+# Giờ vào/ra sleep mode của Greezer
+adb shell dumpsys greezer | grep "SLEEP_MODE"
+# GMS mất mạng lúc nào, bao lâu
+adb shell dumpsys activity service com.google.android.gms/.gcm.GcmService | grep -A2 "INCIDENT"
+# Nighttime mode đang bật (1) hay tắt (0)
+adb shell settings get secure sec_pc_config_scenario_policies_open
+```
+
+Nếu giờ Wi‑Fi/4G bị tắt khớp với `SLEEP_MODE: enter` và GMS báo `ERR_NET_DOWN`, thì đó là Nighttime mode.
+
+---
+
 ## Đang thử nghiệm
 
 | Thử nghiệm | Đã làm | Kết quả tới giờ | Trạng thái |
@@ -117,6 +138,7 @@ Tạo file `.mtz` ẩn (`Download/GmsFix-FCM.mtz`) để ghi đè `theme_values.
 
 ## Khuyến nghị khi dùng
 
+- **Tắt Nighttime mode**: *Cài đặt → Pin → Additional features → Nighttime mode*. Tuỳ chọn này tắt 4G và Wi‑Fi khi máy phát hiện bạn ngủ, nên mọi thông báo ban đêm đều tới trễ tới sáng. Tuỳ chọn *Ban đêm* của app tự giữ nó tắt. Đổi lại pin ban đêm tốn hơn.
 - **Đừng vuốt app chat hoặc ngân hàng khỏi đa nhiệm**, đừng bấm "dọn tất cả". Trên ROM này hai thao tác đó là force-stop. Có thể khoá app trong đa nhiệm.
 - Thấy cảnh báo **Mất thông báo** thì mở app đó lên một lần, hoặc bấm **Fix ngay**.
 - App ở mức "Chỉ khi có tin" thì để cài đặt pin là **Battery saver (recommended)**. Nếu không, PowerKeeper sẽ thêm lại app vào No Restrictions.
