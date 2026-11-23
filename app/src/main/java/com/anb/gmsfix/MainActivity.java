@@ -233,13 +233,13 @@ public class MainActivity extends AppCompatActivity {
         });
         findViewById(R.id.btnNightInfo).setOnClickListener(v -> new MaterialAlertDialogBuilder(this)
                 .setTitle("Ban đêm (sleep mode)")
-                .setMessage("ROM CN có sleep mode ban đêm (khoảng 01:00–05:30, máy để yên): đóng băng cả app "
-                        + "No Restrictions và CẮT MẠNG → FCM mất kết nối, tin tới dồn lúc sáng.\n\n"
-                        + "Bật:\n• " + SleepGuard.NET_KEY + " = off (không cắt mạng khi ngủ)\n• thêm Google Play "
-                        + "services + GMS Fix vào " + SleepGuard.ALARM_KEY + " (alarm heartbeat/đánh thức được "
-                        + "đi qua khi đang bị đóng băng)\n\nGhi cần Shizuku (Fix ngay). Khoá \"cloud_\" có thể bị "
-                        + "Xiaomi đặt lại — app sẽ báo trong Kiểm tra cài đặt. Tốn pin ban đêm hơn chút.\n\n"
-                        + "Hiện tại: " + SleepGuard.status(this))
+                .setMessage("Khi phát hiện bạn ngủ (máy để yên ban đêm), PowerKeeper bật sleep mode: TẮT 4G + Wi-Fi "
+                        + "(tuỳ chọn Pin → Additional features → Nighttime mode) và đóng băng cả app No Restrictions "
+                        + "→ FCM mất kết nối, tin tới dồn lúc sáng.\n\n"
+                        + "Bật:\n• tắt Nighttime mode (" + SleepGuard.NIGHT_KEY + " = 0) — app tự giữ, không cần Shizuku\n"
+                        + "• thêm Google Play services + GMS Fix vào " + SleepGuard.ALARM_KEY + " (alarm heartbeat/"
+                        + "đánh thức được đi qua khi đang bị đóng băng) — cần Shizuku (Fix ngay)\n\n"
+                        + "Tốn pin ban đêm hơn vì máy giữ mạng để nhận tin.\n\nHiện tại: " + SleepGuard.status(this))
                 .setPositiveButton("OK", null)
                 .show());
         swDoze.setChecked(DozeTune.wanted(this));
@@ -579,7 +579,12 @@ public class MainActivity extends AppCompatActivity {
         boolean ok = SleepGuard.applied(this);
         ((TextView) findViewById(R.id.nightValues)).setText(SleepGuard.status(this));
         TextView st = findViewById(R.id.nightStatus);
-        String s = wanted ? (ok ? "✓ Đang áp dụng" : "⚠ Chưa có hiệu lực • bấm Fix ngay (cần Shizuku)")
+        if (wanted) SleepGuard.ensure(this);
+        ok = SleepGuard.applied(this);
+        ((TextView) findViewById(R.id.nightValues)).setText(SleepGuard.status(this));
+        int re = prefs.getInt("nightReapplyCount", 0);
+        String s = wanted ? (ok ? "✓ Đang áp dụng" + (re > 0 ? " • Nighttime mode bị bật lại " + re + " lần (đã tắt)" : "")
+                : SleepGuard.alarmOk(this) ? "⚠ Chưa có hiệu lực" : "⚠ Danh sách alarm chưa có GMS • bấm Fix ngay (cần Shizuku)")
                 : (ok ? "⚠ Đang tắt trong app nhưng hệ thống vẫn giữ" : "");
         st.setText(s);
         st.setVisibility(s.isEmpty() ? View.GONE : View.VISIBLE);

@@ -37,6 +37,7 @@ public class BootReceiver extends BroadcastReceiver {
                 boolean ok = reapplyRuntime(ctx);
                 BroadcastCtrl.ensure(ctx);
                 DozeTune.ensure(ctx);
+                SleepGuard.ensure(ctx);
                 ctx.getSharedPreferences("gmsfix", Context.MODE_PRIVATE).edit()
                         .putLong("bootFixAt", System.currentTimeMillis())
                         .putBoolean("bootFixOk", ok)

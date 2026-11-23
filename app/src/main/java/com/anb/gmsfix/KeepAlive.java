@@ -45,6 +45,7 @@ public class KeepAlive extends BroadcastReceiver {
         }
         schedule(ctx);
         DozeTune.ensure(ctx);
+        SleepGuard.ensure(ctx); // Nighttime mode bị bật lại → tắt (quyền của app)
         BroadcastCtrl.ensure(ctx); // nhẹ: 1 lần đọc setting; ghi lại nếu bị cloud/HyperOS đổi
         NoRestrictGuard.ensure(ctx); // PowerKeeper dựng lại danh sách sau khi khởi động → thêm lại
         if (!ACTION.equals(intent.getAction())) return; // boot / update: chỉ cần lên lịch
