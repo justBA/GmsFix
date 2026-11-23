@@ -43,16 +43,31 @@ final class Steps {
 
     private Steps() {}
 
-    static List<Step> build(Collection<String> pkgs, String selfPkg) {
+    /**
+     * @param alwaysOn app "Luôn chạy nền" (giữ trong No Restrictions); app còn lại trong pkgs là "Chỉ khi có tin"
+     * @param noRestrictValue giá trị MILLET_NO_RESTRICT_APP mới (NoRestrictGuard.targetValue), null = không cần đổi
+     */
+    static List<Step> build(Collection<String> pkgs, Collection<String> alwaysOn, String noRestrictValue, String selfPkg) {
         List<Step> steps = new ArrayList<>();
 
         // GMS Fix cũng cần được miễn hạn chế để KeepAlive (đánh thức GMS định kỳ) chạy được khi tắt màn hình
         List<String> withSelf = new ArrayList<>(pkgs);
         if (!withSelf.contains(selfPkg)) withSelf.add(selfPkg);
 
-        StringBuilder s = new StringBuilder(ADD_FN);
-        for (String p : withSelf) s.append("add_to '--user 0' MILLET_NO_RESTRICT_APP ', ' ").append(p).append(" || rc=1\n");
-        steps.add(new Step("Xiaomi No Restrictions", s.append("exit $rc").toString(), false));
+        // No Restrictions: thêm app "Luôn chạy nền", gỡ app "Chỉ khi có tin" (để Greezer được đóng băng → đỡ pin)
+        StringBuilder s = new StringBuilder("rc=0\n");
+        if (noRestrictValue != null) {
+            s.append("settings --user 0 put system MILLET_NO_RESTRICT_APP '").append(noRestrictValue.replace("'", ""))
+                    .append("' || rc=1\n");
+        }
+        s.append("m=\",$(settings --user 0 get system MILLET_NO_RESTRICT_APP | tr -d ' '),\"\n");
+        for (String p : withSelf) {
+            boolean keep = alwaysOn.contains(p) || p.equals(selfPkg);
+            s.append("case \"$m\" in *\",").append(p).append(",\"*) ")
+                    .append(keep ? "echo '" + p + ": luôn chạy nền';; *) echo '" + p + ": THIẾU'; rc=1;; esac\n"
+                            : "echo '" + p + ": vẫn còn (chưa gỡ)'; rc=1;; *) echo '" + p + ": chỉ khi có tin';; esac\n");
+        }
+        steps.add(new Step("Xiaomi No Restrictions (2 mức)", s.append("exit $rc").toString(), false));
 
         if (pkgs.contains(GMS)) {
             steps.add(new Step("Tắt Xiaomi GMS freezer", "dumpsys greezer IM GMS disable", false));
@@ -110,7 +125,7 @@ final class Steps {
         us.append("[ $rc = 0 ] && echo 'Không app nào bị dừng'\nexit $rc");
         steps.add(new Step("Bỏ trạng thái dừng (stopped)", us.toString(), false));
 
-        steps.add(new Step("Kiểm tra lại", verifyScript(pkgs), false));
+        steps.add(new Step("Kiểm tra lại", verifyScript(pkgs, alwaysOn), false));
         return steps;
     }
 
@@ -120,7 +135,7 @@ final class Steps {
         return s.append("exit $rc").toString();
     }
 
-    private static String verifyScript(Collection<String> pkgs) {
+    private static String verifyScript(Collection<String> pkgs, Collection<String> alwaysOn) {
         StringBuilder s = new StringBuilder("rc=0\n"
                 + "m=\",$(settings --user 0 get system MILLET_NO_RESTRICT_APP | tr -d ' '),\"\n"
                 + "c=\",$(settings get system cloud_lowlatency_whitelist | tr -d ' '),\"\n"
@@ -128,7 +143,7 @@ final class Steps {
                 + "ok() { echo \"✓ $1\"; }\n"
                 + "ko() { echo \"✗ $1\"; rc=1; }\n");
         for (String p : pkgs) {
-            s.append("case \"$m\" in *\",").append(p).append(",\"*) ok '").append(p).append(": No Restrictions';; *) ko '").append(p).append(": No Restrictions';; esac\n");
+            if (alwaysOn.contains(p)) s.append("case \"$m\" in *\",").append(p).append(",\"*) ok '").append(p).append(": No Restrictions';; *) ko '").append(p).append(": No Restrictions';; esac\n");
             s.append("case \"$c\" in *\",").append(p).append(",\"*) ok '").append(p).append(": low-latency';; *) ko '").append(p).append(": low-latency';; esac\n");
             s.append("case \"$w\" in *\",").append(p).append(",\"*) ok '").append(p).append(": Doze whitelist';; *) ko '").append(p).append(": Doze whitelist';; esac\n");
             s.append("cmd appops get ").append(p).append(" RUN_ANY_IN_BACKGROUND | grep -q deny && ko '").append(p)

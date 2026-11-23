@@ -600,7 +600,7 @@ public class MainActivity extends AppCompatActivity {
         setPill(pillHealth, "Đang kiểm tra…", Tone.NEUTRAL);
         new Thread(() -> {
             int added = NoRestrictGuard.ensure(this);
-            if (added > 0) main.post(() -> toast("Đã thêm lại " + added + " app vào No Restrictions (bị PowerKeeper gỡ)"));
+            if (added > 0) main.post(() -> toast("Đã cập nhật " + added + " app trong No Restrictions"));
             HealthCheck.Report r = HealthCheck.runAndNotify(this, true);
             main.post(() -> {
                 health = r;
@@ -686,6 +686,7 @@ public class MainActivity extends AppCompatActivity {
         Set<String> off = getOff();
         Set<String> collapsed = getCollapsed();
         LayoutInflater inf = LayoutInflater.from(this);
+        Set<String> alwaysOn = NoRestrictGuard.alwaysOn(this);
 
         // Gom theo nhóm, trong nhóm sắp theo tên
         java.util.Map<AppGroups.Group, List<String[]>> groups = new java.util.EnumMap<>(AppGroups.Group.class);
@@ -738,7 +739,12 @@ public class MainActivity extends AppCompatActivity {
                 View row = inf.inflate(R.layout.item_selected_app, appsList, false);
                 ImageView icon = row.findViewById(R.id.icon);
                 TextView label = row.findViewById(R.id.label);
-                ((TextView) row.findViewById(R.id.pkg)).setText(p);
+                boolean always = alwaysOn.contains(p);
+                ((TextView) row.findViewById(R.id.pkg)).setText(always ? "Luôn chạy nền" : "Chỉ khi có tin");
+                ImageView tier = row.findViewById(R.id.tier);
+                tier.setImageTintList(ColorStateList.valueOf(always ? color(R.color.warn)
+                        : 0x66888888));
+                tier.setOnClickListener(v -> toggleTier(p, String.valueOf(label.getText())));
                 if (a[1] != null) {
                     label.setText(a[1]);
                     try {
@@ -790,6 +796,29 @@ public class MainActivity extends AppCompatActivity {
         btnRun.setEnabled(!busy && enabledCount > 0);
         if (enabledCount == 0) btnRun.setText(pkgs.isEmpty() ? "Chọn ít nhất 1 app" : "Bật ít nhất 1 app");
         else if (!busy) btnRun.setText("Fix ngay");
+    }
+
+    /** Đổi mức app: "Luôn chạy nền" ⇄ "Chỉ khi có tin", rồi cập nhật No Restrictions (cần Shizuku/root). */
+    private void toggleTier(String p, String label) {
+        Set<String> a = NoRestrictGuard.alwaysOn(this);
+        boolean nowAlways = !a.contains(p);
+        if (nowAlways) a.add(p);
+        else a.remove(p);
+        NoRestrictGuard.setAlwaysOn(this, a);
+        renderApps();
+        String what = label + ": " + (nowAlways ? "luôn chạy nền" : "chỉ khi có tin");
+        if (!nowAlways && !BroadcastCtrl.wanted(this)) {
+            toast(what + " — cần bật \"Cho FCM đánh thức app bị đóng băng\" để không mất tin");
+        }
+        new Thread(() -> {
+            int r = NoRestrictGuard.ensure(this);
+            main.post(() -> {
+                if (r == NoRestrictGuard.NEED_SHELL) toast(what + " • bấm Fix ngay (Shizuku) để áp dụng");
+                else if (r < 0) toast(what + " • lỗi: " + NoRestrictGuard.lastError(this));
+                else toast(what + " • đã áp dụng");
+                refreshHealth();
+            });
+        }).start();
     }
 
     // ---- fix flow ----
@@ -881,7 +910,8 @@ public class MainActivity extends AppCompatActivity {
         new Thread(() -> {
             List<String> pkgs = new ArrayList<>();
             for (String p : getEnabledPkgs()) if (PKG_NAME.matcher(p).matches()) pkgs.add(p);
-            List<Steps.Step> steps = Steps.build(pkgs, getPackageName());
+            List<Steps.Step> steps = Steps.build(pkgs, NoRestrictGuard.alwaysOn(this),
+                    NoRestrictGuard.targetValue(this), getPackageName());
             List<View> rows = new ArrayList<>();
             main.post(() -> {
                 fullLog.setLength(0);

@@ -143,7 +143,7 @@
                     android:layout_marginTop="2dp"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="Được miễn hạn chế pin, Doze, đóng băng và cho chạy nền. Tắt công tắc để tạm bỏ qua, nhấn giữ app để xoá."
+                    android:text="⚡ cam = luôn chạy nền (không bị đóng băng). ⚡ xám = chỉ khi có tin: được đóng băng cho đỡ pin, có tin FCM thì mở băng. Nhấn giữ app để xoá."
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 

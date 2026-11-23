@@ -149,6 +149,7 @@ final class HealthCheck {
         String noRestrict = NoRestrictGuard.read(ctx);
         if (noRestrict == null) r.complete = false; // không đọc được → báo "chưa đủ quyền", không im lặng
         String noRestrictNorm = noRestrict == null ? null : "," + noRestrict.replace(" ", "") + ",";
+        Set<String> alwaysOn = NoRestrictGuard.alwaysOn(ctx);
 
         for (String p : pkgs) {
             ApplicationInfo ai;
@@ -168,7 +169,7 @@ final class HealthCheck {
                 if (bg != null && (bg.equals("ignore") || bg.equals("deny"))) list.add(NO_BG);
             }
             if (!doze.isEmpty() && !doze.contains("," + p + ",")) list.add(NO_DOZE);
-            if (noRestrictNorm != null && !noRestrictNorm.contains("," + p + ",")) list.add(NO_RESTRICT);
+            if (noRestrictNorm != null && alwaysOn.contains(p) && !noRestrictNorm.contains("," + p + ",")) list.add(NO_RESTRICT);
             if (!netpolicy.isEmpty() && !bgDataUids.contains(String.valueOf(ai.uid))
                     && !netpolicy.contains("UID=" + ai.uid + "\n") /* default allowlist */) {
                 list.add(NO_BG_DATA);

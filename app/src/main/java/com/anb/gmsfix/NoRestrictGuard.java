@@ -12,6 +12,9 @@ import java.util.Set;
 /**
  * Giữ các app đã chọn trong Settings.System "MILLET_NO_RESTRICT_APP".
  *
+ * Hai mức: "Luôn chạy nền" (giữ trong danh sách) và "Chỉ khi có tin" (gỡ khỏi danh sách để Greezer
+ * được đóng băng, BroadcastCtrl mở băng khi có tin FCM).
+ *
  * Quan sát trên HyperOS 4: sau khi khởi động lại, PowerKeeper dựng lại danh sách này từ dữ liệu
  * "Tiết kiệm pin → Không hạn chế" của chính nó → các app thêm bằng lệnh bị mất. Ở đây app tự thêm lại
  * bằng quyền của nó (WRITE_SECURE_SETTINGS) — nếu ROM cho phép; mọi lỗi được ghi lại để hiển thị.
@@ -48,10 +51,56 @@ final class NoRestrictGuard {
         return s;
     }
 
+    static final String PREF_ALWAYS_ON = "pkgsAlwaysOn";
+
+    /**
+     * App "Luôn chạy nền" (giữ trong No Restrictions → Greezer không bao giờ đóng băng).
+     * App còn lại trong danh sách là "Chỉ khi có tin": được đóng băng khi rảnh, tin FCM tới thì
+     * BroadcastCtrl (aurogon broadcastctrl) mở băng → tiết kiệm pin.
+     * Chưa chọn lần nào → mặc định nhóm Hệ thống (GMS, MiPush…) và Đồng hồ.
+     */
+    static Set<String> alwaysOn(Context ctx) {
+        SharedPreferences p = prefs(ctx);
+        if (p.contains(PREF_ALWAYS_ON)) return new LinkedHashSet<>(p.getStringSet(PREF_ALWAYS_ON, new LinkedHashSet<>()));
+        Set<String> d = new LinkedHashSet<>();
+        android.content.pm.PackageManager pm = ctx.getPackageManager();
+        for (String pkg : p.getStringSet("pkgs", new LinkedHashSet<>())) {
+            AppGroups.Group g = AppGroups.of(pm, pkg);
+            if (g == AppGroups.Group.SYSTEM || g == AppGroups.Group.WEAR) d.add(pkg);
+        }
+        return d;
+    }
+
+    static void setAlwaysOn(Context ctx, Set<String> s) {
+        prefs(ctx).edit().putStringSet(PREF_ALWAYS_ON, new LinkedHashSet<>(s)).apply();
+    }
+
+    /** Cần có trong No Restrictions: app đang bật + "Luôn chạy nền", và chính GMS Fix. */
     static Set<String> wantedPkgs(Context ctx) {
         Set<String> w = new LinkedHashSet<>(HealthCheck.enabledPkgs(ctx));
+        w.retainAll(alwaysOn(ctx));
         w.add(ctx.getPackageName());
         return w;
+    }
+
+    /** Cần gỡ khỏi No Restrictions: app đang bật ở mức "Chỉ khi có tin" (app ngoài danh sách thì không đụng). */
+    static Set<String> unwantedPkgs(Context ctx) {
+        Set<String> u = new LinkedHashSet<>(HealthCheck.enabledPkgs(ctx));
+        u.removeAll(alwaysOn(ctx));
+        u.remove(ctx.getPackageName());
+        return u;
+    }
+
+    /** Giá trị danh sách mới (giữ app của người dùng/ROM). null = không đọc được hoặc không cần đổi. */
+    static String targetValue(Context ctx) {
+        String v = read(ctx);
+        if (v == null) return null;
+        Set<String> have = parse(v);
+        Set<String> next = new LinkedHashSet<>(have);
+        next.removeAll(unwantedPkgs(ctx));
+        next.addAll(wantedPkgs(ctx));
+        if (next.equals(have)) return null;
+        return String.join(", ", next).replace("'", "");
     }
 
     /** App đã chọn mà đang thiếu trong danh sách. null = không đọc được. */
@@ -68,7 +117,8 @@ final class NoRestrictGuard {
     static final int NEED_SHELL = -2;
 
     /**
-     * Thêm lại app bị thiếu (giữ nguyên app của người dùng/ROM). Trả về số app đã thêm, 0 nếu không thiếu,
+     * Thêm app "Luôn chạy nền" bị thiếu, gỡ app "Chỉ khi có tin" (giữ nguyên app của người dùng/ROM).
+     * Trả về số app đã thêm + gỡ, 0 nếu đã đúng,
      * NEED_SHELL nếu cần Shizuku/root, -1 nếu ghi lỗi (lỗi ở "nrWriteErr"/"nrReadErr").
      *
      * Ghi bằng shell (Shizuku/root) vì Android cấm app thường ghi khoá System không công khai
@@ -80,14 +130,17 @@ final class NoRestrictGuard {
         Set<String> have = parse(v);
         List<String> add = new ArrayList<>();
         for (String p : wantedPkgs(ctx)) if (!have.contains(p)) add.add(p);
-        if (add.isEmpty()) return 0;
+        List<String> rm = new ArrayList<>();
+        for (String p : unwantedPkgs(ctx)) if (have.contains(p)) rm.add(p);
+        if (add.isEmpty() && rm.isEmpty()) return 0;
         SharedPreferences p = prefs(ctx);
         Shell.waitShizuku(3000); // binder Shizuku có thể chưa tới ngay sau khi app khởi động
         Shell.Mode mode = Shell.available(false);
         if (mode == null) {
-            p.edit().putString("nrWriteErr", "Cần Shizuku hoặc root để thêm lại " + add.size() + " app").apply();
+            p.edit().putString("nrWriteErr", "Cần Shizuku hoặc root để cập nhật " + (add.size() + rm.size()) + " app").apply();
             return NEED_SHELL;
         }
+        have.removeAll(rm);
         have.addAll(add);
         String value = String.join(", ", have).replace("'", "");
         try {
@@ -99,7 +152,9 @@ final class NoRestrictGuard {
         }
         // Xác nhận đã ghi thật
         Set<String> after = parse(read(ctx));
-        if (!after.containsAll(add)) {
+        boolean removed = true;
+        for (String r : rm) if (after.contains(r)) removed = false;
+        if (!after.containsAll(add) || !removed) {
             p.edit().putString("nrWriteErr", "Ghi xong nhưng đọc lại vẫn thiếu (ROM chặn?)").apply();
             return -1;
         }
@@ -107,8 +162,9 @@ final class NoRestrictGuard {
                 .putLong("nrLastFix", System.currentTimeMillis())
                 .putInt("nrFixCount", p.getInt("nrFixCount", 0) + 1)
                 .putInt("nrLastAdded", add.size())
+                .putInt("nrLastRemoved", rm.size())
                 .apply();
-        return add.size();
+        return add.size() + rm.size();
     }
 
     static String lastError(Context ctx) {
