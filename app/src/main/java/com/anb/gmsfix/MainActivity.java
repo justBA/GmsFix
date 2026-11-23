@@ -688,6 +688,8 @@ public class MainActivity extends AppCompatActivity {
         Set<String> collapsed = getCollapsed();
         LayoutInflater inf = LayoutInflater.from(this);
         Set<String> alwaysOn = NoRestrictGuard.alwaysOn(this);
+        String nrRaw = NoRestrictGuard.read(this);
+        Set<String> nrNow = nrRaw == null ? null : NoRestrictGuard.parse(nrRaw);
 
         // Gom theo nhóm, trong nhóm sắp theo tên
         java.util.Map<AppGroups.Group, List<String[]>> groups = new java.util.EnumMap<>(AppGroups.Group.class);
@@ -742,7 +744,13 @@ public class MainActivity extends AppCompatActivity {
                 ImageView icon = row.findViewById(R.id.icon);
                 TextView label = row.findViewById(R.id.label);
                 boolean always = alwaysOn.contains(p);
-                ((TextView) row.findViewById(R.id.pkg)).setText(always ? "Luôn chạy nền" : "Chỉ khi có tin");
+                TextView sub = row.findViewById(R.id.pkg);
+                boolean mismatch = !always && nrNow != null && nrNow.contains(p);
+                sub.setText(always ? "Luôn chạy nền" : mismatch ? "Chỉ khi có tin • ⚠ pin đang No restrictions ›" : "Chỉ khi có tin");
+                if (mismatch) {
+                    sub.setTextColor(color(R.color.warn));
+                    sub.setOnClickListener(v -> openBatteryPage(p, false));
+                }
                 ImageView tier = row.findViewById(R.id.tier);
                 tier.setImageTintList(ColorStateList.valueOf(always ? color(R.color.warn)
                         : 0x66888888));
@@ -809,19 +817,33 @@ public class MainActivity extends AppCompatActivity {
         else a.remove(p);
         NoRestrictGuard.setAlwaysOn(this, a);
         renderApps();
-        String what = label + ": " + (nowAlways ? "luôn chạy nền" : "chỉ khi có tin");
         if (!nowAlways && !BroadcastCtrl.wanted(this)) {
-            toast(what + " — cần bật \"Cho FCM đánh thức app bị đóng băng\" để không mất tin");
+            toast(label + ": cần bật \"Cho FCM đánh thức app bị đóng băng\" để không mất tin");
         }
-        new Thread(() -> {
-            int r = NoRestrictGuard.ensure(this);
-            main.post(() -> {
-                if (r == NoRestrictGuard.NEED_SHELL) toast(what + " • bấm Fix ngay (Shizuku) để áp dụng");
-                else if (r < 0) toast(what + " • lỗi: " + NoRestrictGuard.lastError(this));
-                else toast(what + " • đã áp dụng");
-                refreshHealth();
-            });
-        }).start();
+        if (NoRestrictGuard.noBatteryUi(p)) {
+            // GMS: không có lựa chọn pin → GMS Fix tự thêm (cần Shizuku); "chỉ khi có tin" thì để PowerKeeper xoá
+            new Thread(() -> {
+                int r = NoRestrictGuard.ensure(this);
+                main.post(() -> {
+                    if (r == NoRestrictGuard.NEED_SHELL) toast(label + " • bấm Fix ngay (Shizuku) để áp dụng");
+                    refreshHealth();
+                });
+            }).start();
+            return;
+        }
+        // Nguồn gốc là cài đặt pin của PowerKeeper → mở đúng trang để người dùng chọn
+        openBatteryPage(p, nowAlways);
+    }
+
+    /** Mở trang Battery details của app; nhắc chọn đúng mục theo mức. */
+    private void openBatteryPage(String p, boolean always) {
+        toast(always ? "Chọn \"No restrictions\" để luôn chạy nền"
+                : "Chọn \"Battery saver (recommended)\" để được đóng băng khi rảnh");
+        try {
+            startActivity(NoRestrictGuard.batteryPage(p));
+        } catch (Exception e) {
+            toast("Không mở được cài đặt pin: " + e.getMessage());
+        }
     }
 
     // ---- fix flow ----

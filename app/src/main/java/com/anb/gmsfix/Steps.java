@@ -65,7 +65,8 @@ final class Steps {
             boolean keep = alwaysOn.contains(p) || p.equals(selfPkg);
             s.append("case \"$m\" in *\",").append(p).append(",\"*) ")
                     .append(keep ? "echo '" + p + ": luôn chạy nền';; *) echo '" + p + ": THIẾU'; rc=1;; esac\n"
-                            : "echo '" + p + ": vẫn còn (chưa gỡ)'; rc=1;; *) echo '" + p + ": chỉ khi có tin';; esac\n");
+                            : "echo '⚠ " + p + ": cài đặt pin đang No restrictions → đổi sang Battery saver';; "
+                            + "*) echo '" + p + ": chỉ khi có tin';; esac\n");
         }
         steps.add(new Step("Xiaomi No Restrictions (2 mức)", s.append("exit $rc").toString(), false));
 

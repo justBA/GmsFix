@@ -61,6 +61,8 @@ final class HealthCheck {
     static final String NO_BG = "bị hạn chế chạy nền";
     static final String NO_DOZE = "không có trong Doze whitelist";
     static final String NO_RESTRICT = "mất No Restrictions";
+    /** App "Chỉ khi có tin" nhưng cài đặt pin vẫn "No restrictions" → không được đóng băng (tốn pin). */
+    static final String BATTERY_NR = "cài đặt pin đang No restrictions";
     static final String NO_BG_DATA = "chưa được dùng dữ liệu nền";
     static final String NOTIF_OFF = "thông báo đang bị tắt";
 
@@ -170,6 +172,7 @@ final class HealthCheck {
             }
             if (!doze.isEmpty() && !doze.contains("," + p + ",")) list.add(NO_DOZE);
             if (noRestrictNorm != null && alwaysOn.contains(p) && !noRestrictNorm.contains("," + p + ",")) list.add(NO_RESTRICT);
+            if (noRestrictNorm != null && !alwaysOn.contains(p) && noRestrictNorm.contains("," + p + ",")) list.add(BATTERY_NR);
             if (!netpolicy.isEmpty() && !bgDataUids.contains(String.valueOf(ai.uid))
                     && !netpolicy.contains("UID=" + ai.uid + "\n") /* default allowlist */) {
                 list.add(NO_BG_DATA);

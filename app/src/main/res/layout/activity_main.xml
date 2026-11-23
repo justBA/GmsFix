@@ -143,7 +143,7 @@
                     android:layout_marginTop="2dp"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="⚡ cam = luôn chạy nền (không bị đóng băng). ⚡ xám = chỉ khi có tin: được đóng băng cho đỡ pin, có tin FCM thì mở băng. Nhấn giữ app để xoá."
+                    android:text="⚡ cam = luôn chạy nền. ⚡ xám = chỉ khi có tin: được đóng băng cho đỡ pin, có tin FCM thì mở băng. Bấm ⚡ để đổi (mở cài đặt pin của app). Nhấn giữ app để xoá."
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 

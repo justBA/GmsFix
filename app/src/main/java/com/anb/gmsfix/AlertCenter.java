@@ -154,6 +154,7 @@ final class AlertCenter {
         for (Map.Entry<String, List<String>> e : r.issues.entrySet()) {
             List<String> other = new ArrayList<>(e.getValue());
             boolean off = other.remove(HealthCheck.NOTIF_OFF);
+            other.remove(HealthCheck.BATTERY_NR); // lựa chọn của người dùng, không phải HyperOS đổi → chỉ hiện trong app
             String label = HealthCheck.label(pm, e.getKey());
             if (off) notif.append("• ").append(label).append('\n');
             if (!other.isEmpty()) settings.append("• ").append(label).append(": ").append(String.join(", ", other)).append('\n');
