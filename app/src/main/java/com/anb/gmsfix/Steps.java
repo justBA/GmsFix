@@ -77,12 +77,27 @@ final class Steps {
         steps.add(new Step("Greezer / Aurogon allowlist",
                 forEach(pkgs, "dumpsys greezer LM add %s"), false));
 
-        s = new StringBuilder(ADD_FN);
-        for (String p : pkgs) s.append("add_to '' cloud_lowlatency_whitelist ',' ").append(p).append(" || rc=1\n");
-        steps.add(new Step("Low-latency whitelist", s.append("exit $rc").toString(), false));
+        // Miễn Doze / độ trễ thấp / bucket active: CHỈ app "Luôn chạy nền". App "Chỉ khi có tin" không cần
+        // (tin FCM ưu tiên cao được Android cho thức tạm) — miễn Doze cho nhiều app thì máy không ngủ sâu được.
+        List<String> always = new ArrayList<>();
+        List<String> fcmOnly = new ArrayList<>();
+        for (String p : pkgs) (alwaysOn.contains(p) ? always : fcmOnly).add(p);
+        List<String> alwaysSelf = new ArrayList<>(always);
+        if (!alwaysSelf.contains(selfPkg)) alwaysSelf.add(selfPkg);
 
-        steps.add(new Step("Doze whitelist (tối ưu pin)",
-                forEach(withSelf, "dumpsys deviceidle whitelist +%s"), false));
+        if (!always.isEmpty()) {
+            s = new StringBuilder(ADD_FN);
+            for (String p : always) s.append("add_to '' cloud_lowlatency_whitelist ',' ").append(p).append(" || rc=1\n");
+            steps.add(new Step("Low-latency (luôn chạy nền)", s.append("exit $rc").toString(), false));
+        }
+
+        StringBuilder dz = new StringBuilder("rc=0\nwl=\"$(dumpsys deviceidle whitelist)\"\n");
+        for (String p : alwaysSelf) dz.append("dumpsys deviceidle whitelist +").append(p).append(" >/dev/null && echo '")
+                .append(p).append(": miễn Doze' || rc=1\n");
+        // gỡ app "Chỉ khi có tin" khỏi danh sách người dùng (do GMS Fix/PowerKeeper thêm trước đây)
+        for (String p : fcmOnly) dz.append("case \"$wl\" in *\"user,").append(p).append(",\"*) dumpsys deviceidle whitelist -")
+                .append(p).append(" >/dev/null && echo '").append(p).append(": bỏ miễn Doze (chỉ khi có tin)';; esac\n");
+        steps.add(new Step("Doze whitelist (luôn chạy nền)", dz.append("exit $rc").toString(), false));
 
         steps.add(new Step("Cho phép chạy nền",
                 forEach(withSelf, "cmd appops set %1$s RUN_ANY_IN_BACKGROUND allow && "
@@ -98,8 +113,10 @@ final class Steps {
         }
         steps.add(new Step("Cho dùng dữ liệu nền", nd.append("exit $rc").toString(), true));
 
-        steps.add(new Step("Standby bucket = active",
-                forEach(pkgs, "am set-standby-bucket %1$s active && echo \"%1$s: active\""), true));
+        if (!always.isEmpty()) {
+            steps.add(new Step("Standby bucket = active (luôn chạy nền)",
+                    forEach(always, "am set-standby-bucket %1$s active && echo \"%1$s: active\""), true));
+        }
 
         List<String> autostart = new ArrayList<>(pkgs);
         autostart.add(selfPkg); // để nhận BOOT_COMPLETED trên MIUI/HyperOS
@@ -145,8 +162,8 @@ final class Steps {
                 + "ko() { echo \"✗ $1\"; rc=1; }\n");
         for (String p : pkgs) {
             if (alwaysOn.contains(p)) s.append("case \"$m\" in *\",").append(p).append(",\"*) ok '").append(p).append(": No Restrictions';; *) ko '").append(p).append(": No Restrictions';; esac\n");
-            s.append("case \"$c\" in *\",").append(p).append(",\"*) ok '").append(p).append(": low-latency';; *) ko '").append(p).append(": low-latency';; esac\n");
-            s.append("case \"$w\" in *\",").append(p).append(",\"*) ok '").append(p).append(": Doze whitelist';; *) ko '").append(p).append(": Doze whitelist';; esac\n");
+            if (alwaysOn.contains(p)) s.append("case \"$c\" in *\",").append(p).append(",\"*) ok '").append(p).append(": low-latency';; *) ko '").append(p).append(": low-latency';; esac\n");
+            if (alwaysOn.contains(p)) s.append("case \"$w\" in *\",").append(p).append(",\"*) ok '").append(p).append(": Doze whitelist';; *) ko '").append(p).append(": Doze whitelist';; esac\n");
             s.append("cmd appops get ").append(p).append(" RUN_ANY_IN_BACKGROUND | grep -q deny && ko '").append(p)
                     .append(": chạy nền' || ok '").append(p).append(": chạy nền'\n");
         }

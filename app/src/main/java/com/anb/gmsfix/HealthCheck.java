@@ -170,7 +170,7 @@ final class HealthCheck {
                 String bg = o.get("RUN_ANY_IN_BACKGROUND");
                 if (bg != null && (bg.equals("ignore") || bg.equals("deny"))) list.add(NO_BG);
             }
-            if (!doze.isEmpty() && !doze.contains("," + p + ",")) list.add(NO_DOZE);
+            if (!doze.isEmpty() && alwaysOn.contains(p) && !doze.contains("," + p + ",")) list.add(NO_DOZE);
             if (noRestrictNorm != null && alwaysOn.contains(p) && !noRestrictNorm.contains("," + p + ",")) list.add(NO_RESTRICT);
             if (noRestrictNorm != null && !alwaysOn.contains(p) && noRestrictNorm.contains("," + p + ",")) list.add(BATTERY_NR);
             if (!netpolicy.isEmpty() && !bgDataUids.contains(String.valueOf(ai.uid))
