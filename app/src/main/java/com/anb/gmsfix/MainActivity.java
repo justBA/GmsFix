@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         btnKaInterval.setOnClickListener(v -> chooseKaInterval());
 
         for (int[] rs : new int[][]{{R.id.row_swAutoOff, R.id.swAutoOff}, {R.id.row_swRemind, R.id.swRemind},
-                {R.id.row_swKeepAlive, R.id.swKeepAlive}, {R.id.row_swBcCtrl, R.id.swBcCtrl}, {R.id.row_swBcAuto, R.id.swBcAuto}, {R.id.row_swDoze, R.id.swDoze}}) {
+                {R.id.row_swKeepAlive, R.id.swKeepAlive}, {R.id.row_swBcCtrl, R.id.swBcCtrl}, {R.id.row_swBcAuto, R.id.swBcAuto}, {R.id.row_swBcAll, R.id.swBcAll}, {R.id.row_swDoze, R.id.swDoze}}) {
             MaterialSwitch target = findViewById(rs[1]);
             findViewById(rs[0]).setOnClickListener(v -> { if (target.isEnabled()) target.toggle(); });
         }
@@ -204,6 +204,16 @@ public class MainActivity extends AppCompatActivity {
         refreshAlerts();
         });
         bcStatus.setOnClickListener(v -> chooseBcMode());
+        MaterialSwitch swBcAll = findViewById(R.id.swBcAll);
+        swBcAll.setChecked(BroadcastCtrl.allFcm(this));
+        swBcAll.setOnCheckedChangeListener((b, on) -> {
+            prefs.edit().putBoolean(BroadcastCtrl.PREF_ALL_FCM, on).apply();
+            if (BroadcastCtrl.wanted(this)) {
+                String err = BroadcastCtrl.apply(this);
+                if (err != null) toast("Không ghi được: " + err);
+            }
+            refreshBroadcastCtrl();
+        });
         swDoze = findViewById(R.id.swDoze);
         dozeStatus = findViewById(R.id.dozeStatus);
         dozeValues = findViewById(R.id.dozeValues);
@@ -569,6 +579,11 @@ public class MainActivity extends AppCompatActivity {
         boolean wanted = BroadcastCtrl.wanted(this);
         swBcAuto.setEnabled(wanted);
         findViewById(R.id.row_swBcAuto).setAlpha(wanted ? 1f : 0.5f);
+        boolean fcmMode = BroadcastCtrl.fcmOnly(this);
+        findViewById(R.id.swBcAll).setEnabled(wanted && fcmMode);
+        findViewById(R.id.row_swBcAll).setAlpha(wanted && fcmMode ? 1f : 0.5f);
+        ((TextView) findViewById(R.id.bcAllSub)).setText("Không chỉ app trong danh sách • "
+                + BroadcastCtrl.fcmApps(this).size() + " app có FCM");
         bcStatus.setVisibility(View.VISIBLE);
         if (wanted) BroadcastCtrl.ensure(this);
         boolean applied = BroadcastCtrl.applied(this);

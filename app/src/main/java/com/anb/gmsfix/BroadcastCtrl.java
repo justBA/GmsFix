@@ -28,6 +28,8 @@ final class BroadcastCtrl {
     static final String FCM_ACTION = "com.google.android.c2dm.intent.RECEIVE";
     static final String PREF_ON = "bcCtrlOff";
     static final String PREF_AUTO = "bcAutoReapply";
+    /** Thêm mọi app có FCM (không chỉ app trong danh sách) vào danh sách mở băng. Mặc định bật. */
+    static final String PREF_ALL_FCM = "bcAllFcm";
     private static final String PREF_ORIGINAL = "bcOriginal";
 
     private BroadcastCtrl() {}
@@ -44,6 +46,25 @@ final class BroadcastCtrl {
         return prefs(ctx).getBoolean(PREF_AUTO, true);
     }
 
+    static boolean allFcm(Context ctx) {
+        return prefs(ctx).getBoolean(PREF_ALL_FCM, true);
+    }
+
+    /** Mọi app đã cài có receiver nhận tin FCM (c2dm RECEIVE), trừ hệ thống "android" và GMS. Sắp xếp ổn định. */
+    static java.util.Set<String> fcmApps(Context ctx) {
+        java.util.Set<String> out = new java.util.TreeSet<>();
+        try {
+            for (android.content.pm.ResolveInfo ri : ctx.getPackageManager().queryBroadcastReceivers(
+                    new android.content.Intent(FCM_ACTION), 0)) {
+                if (ri.activityInfo == null) continue;
+                String p = ri.activityInfo.packageName;
+                if (!p.equals("android") && !p.equals(Steps.GMS)) out.add(p);
+            }
+        } catch (Throwable ignored) {
+        }
+        return out;
+    }
+
     static boolean fcmOnly(Context ctx) {
         return !"all".equals(prefs(ctx).getString(PREF_MODE, "fcm"));
     }
@@ -57,7 +78,13 @@ final class BroadcastCtrl {
     static String desiredEntry(Context ctx) {
         if (!fcmOnly(ctx)) return ENTRY;
         StringBuilder sb = new StringBuilder("broadcastctrl:true");
-        for (String p : HealthCheck.enabledPkgs(ctx)) {
+        // app trong danh sách trước, rồi mọi app có FCM khác (đã sắp xếp → chuỗi ổn định để so sánh applied())
+        java.util.Set<String> all = new java.util.LinkedHashSet<>(HealthCheck.enabledPkgs(ctx));
+        if (allFcm(ctx)) {
+            java.util.Set<String> off = prefs(ctx).getStringSet("pkgsOff", java.util.Collections.emptySet());
+            for (String p : fcmApps(ctx)) if (!off.contains(p)) all.add(p); // app bị tắt trong danh sách thì tôn trọng
+        }
+        for (String p : all) {
             if (p.matches("[A-Za-z0-9_.]+") && !p.equals(Steps.GMS)) sb.append('#').append(p).append('/').append(FCM_ACTION);
         }
         return sb.toString();

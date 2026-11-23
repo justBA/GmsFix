@@ -87,7 +87,9 @@ final class AlertCenter {
     /** Gọi khi có output GcmService mới. Không cần quyền gì thêm ngoài DUMP. */
     static void checkFcm(Context ctx, String gcmOut) {
         if (gcmOut == null || gcmOut.isEmpty()) return;
-        Set<String> wanted = HealthCheck.enabledPkgs(ctx);
+        Set<String> wanted = new LinkedHashSet<>(HealthCheck.enabledPkgs(ctx));
+        // "Mọi app có FCM" đang bật → theo dõi cả app ngoài danh sách (vd. app bị dừng nên mất tin)
+        if (BroadcastCtrl.wanted(ctx) && BroadcastCtrl.allFcm(ctx)) wanted.addAll(BroadcastCtrl.fcmApps(ctx));
         PackageManager pm = ctx.getPackageManager();
         Set<String> seen = new LinkedHashSet<>(Arrays.asList(prefs(ctx).getString("alertSeen", "").split("\n")));
         boolean firstRun = !prefs(ctx).contains("alertSeen");
