@@ -130,7 +130,7 @@ final class AlertCenter {
             StringBuilder sb = new StringBuilder();
             for (Map.Entry<String, List<String>> e : lost.entrySet()) {
                 sb.append("• ").append(HealthCheck.label(pm, e.getKey())).append(": ")
-                        .append(e.getValue().size()).append(" tin (").append(e.getValue().get(0)).append(")\n");
+                        .append(e.getValue().size()).append(" tin (").append(localFmt(e.getValue().get(0))).append(")\n");
             }
             raise(ctx, Type.LOST, lost.size() + " app bị mất thông báo", sb.toString().trim()
                     + "\nMở app đó lên 1 lần, hoặc Fix ngay để bỏ trạng thái dừng.");
@@ -235,6 +235,12 @@ final class AlertCenter {
     }
 
     private static final Pattern UTC_TIME = Pattern.compile("(\\d{2}-\\d{2} \\d{2}:\\d{2}) UTC");
+
+    /** "11-24 06:59" (giờ máy, dạng trong log sự kiện GcmService) → "06:59 24/11". */
+    static String localFmt(String mmddhhmm) {
+        String[] p = mmddhhmm.split("[- ]");
+        return p.length == 3 ? p[2] + " " + p[1] + "/" + p[0] : mmddhhmm;
+    }
 
     /** "11-23 13:05" (UTC, dạng trong dumpsys GcmService) → "20:05 23/11" theo giờ máy. */
     static String utcToLocal(String mmddhhmm) {
