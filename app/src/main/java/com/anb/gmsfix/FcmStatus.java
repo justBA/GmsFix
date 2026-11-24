@@ -49,9 +49,8 @@ final class FcmStatus {
     String stats24() {
         if (conns24 < 0) return null;
         // GMS đếm cả lần đổi Wi-Fi↔4G (rớt 0 giây) và tin ưu tiên cao trễ chỉ 1–2 giây → ghi rõ phần đáng chú ý
-        String drops = drops24 + " lần rớt" + (longDrops >= 0 ? " (" + longDrops + " lần > 1 phút)" : "");
-        String delays = delayed24 + " tin trễ" + (seriousDelays >= 0 ? " (" + seriousDelays + " cần chú ý)" : "");
-        return drops + " • " + delays + " • lâu nhất " + (maxLatSec24 / 60) + " phút";
+        if (longDrops < 0) return "Rớt " + drops24 + " • trễ " + delayed24;
+        return "Rớt " + drops24 + " (" + longDrops + " lâu) • trễ " + delayed24 + " (" + seriousDelays + " đáng lo)";
     }
 
     /** "11-24 02:59" (UTC) → epoch ms; 0 nếu lỗi. */

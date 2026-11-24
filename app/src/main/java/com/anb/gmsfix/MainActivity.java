@@ -417,8 +417,12 @@ public class MainActivity extends AppCompatActivity {
                     setPill(pillFcm24, "Không có dữ liệu", Tone.NEUTRAL);
                     subFcm24.setVisibility(View.GONE);
                 } else {
-                    setPill(pillFcm24, s.drops24 == 0 ? "Ổn định" : s.drops24 + " lần rớt",
-                            s.drops24 == 0 ? Tone.OK : s.drops24 > 20 ? Tone.ERR : Tone.WARN);
+                    // nhãn theo phần đáng chú ý: rớt > 1 phút, tin trễ vượt ngưỡng cảnh báo
+                    int bad = Math.max(0, s.longDrops) + Math.max(0, s.seriousDelays);
+                    boolean known = s.longDrops >= 0;
+                    setPill(pillFcm24, known ? (bad == 0 ? "Ổn định" : bad + " sự cố") : s.drops24 + " lần rớt",
+                            known ? (bad == 0 ? Tone.OK : bad > 5 ? Tone.ERR : Tone.WARN)
+                                    : s.drops24 == 0 ? Tone.OK : Tone.WARN);
                     subFcm24.setText(st24);
                     subFcm24.setVisibility(View.VISIBLE);
                 }

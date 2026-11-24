@@ -57,7 +57,9 @@ Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riên
 - **App tắt thông báo**.
 - Trang **Log** riêng, có lọc theo loại và ghi rõ tên app.
 
-**Trạng thái:** kết nối FCM, thống kê 24 giờ (số lần rớt, tin trễ, lâu nhất), kiểm tra cài đặt, Shizuku, root, Developer options. Có widget hiển thị trạng thái FCM.
+**Trạng thái:** kết nối FCM, thống kê 24 giờ, kiểm tra cài đặt, Shizuku, root, Developer options. Có widget hiển thị trạng thái FCM.
+- **FCM 24 giờ qua** ghi dạng `Rớt 10 (2 lâu) • trễ 22 (0 đáng lo)`. Con số đầu là của GMS, đếm cả lần đổi Wi‑Fi ↔ 4G (rớt 0 giây) và tin ưu tiên cao trễ 1–2 giây, nên luôn lớn hơn log cảnh báo. Trong ngoặc là phần đáng chú ý: rớt quá 1 phút, tin ưu tiên cao trễ quá 2 phút, tin thường trễ quá 35 phút. Nhãn màu bên phải dựa trên phần này.
+- **Log cảnh báo** ghi theo giờ máy. Giờ trong chẩn đoán của GMS là UTC, app tự đổi.
 
 **Fix ngay** (cần Shizuku hoặc root). Các bước:
 1. No Restrictions theo 2 mức
