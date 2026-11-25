@@ -51,7 +51,46 @@ final class AppPicker {
 
     private AppPicker() {}
 
+    /** Xiaomi/HyperOS: quyền runtime "Đọc danh sách ứng dụng đã cài" (MIUI security center). */
+    static final String MIUI_PERM = "com.android.permission.GET_INSTALLED_APPS";
+    static final int PERM_REQ = 1003;
+    private static Runnable pending;
+
+    /** ROM có quyền riêng của Xiaomi mà GMS Fix chưa được cho phép. */
+    static boolean needsMiuiPerm(android.content.Context ctx) {
+        try {
+            android.content.pm.PermissionInfo pi = ctx.getPackageManager().getPermissionInfo(MIUI_PERM, 0);
+            if (pi == null || !"com.lbe.security.miui".equals(pi.packageName)) return false;
+        } catch (Throwable t) {
+            return false; // ROM không có quyền này (không phải Xiaomi)
+        }
+        return ctx.checkSelfPermission(MIUI_PERM) != PackageManager.PERMISSION_GRANTED;
+    }
+
+    /** Gọi từ onRequestPermissionsResult của Activity: mở lại danh sách sau khi người dùng trả lời. */
+    static void onPermissionResult(int requestCode) {
+        if (requestCode != PERM_REQ || pending == null) return;
+        Runnable r = pending;
+        pending = null;
+        r.run();
+    }
+
     static void show(Activity activity, Set<String> current, Consumer<Set<String>> onDone) {
+        if (pending == null && needsMiuiPerm(activity)) {
+            pending = () -> showNow(activity, current, onDone);
+            try {
+                activity.requestPermissions(new String[]{MIUI_PERM}, PERM_REQ);
+                return;
+            } catch (Throwable t) {
+                pending = null;
+            }
+        }
+        pending = null;
+        showNow(activity, current, onDone);
+    }
+
+    private static void showNow(Activity activity, Set<String> current, Consumer<Set<String>> onDone) {
+        if (activity.isFinishing() || activity.isDestroyed()) return;
         Set<String> selected = new LinkedHashSet<>(current);
         List<App> all = new ArrayList<>();
         /** App hoặc AppGroups.Group (dòng tiêu đề nhóm). */
@@ -62,6 +101,7 @@ final class AppPicker {
         MaterialSwitch showSystem = view.findViewById(R.id.showSystem);
         RecyclerView list = view.findViewById(R.id.list);
         View loading = view.findViewById(R.id.loading);
+        TextView note = view.findViewById(R.id.pickerNote);
 
         RecyclerView.Adapter<RecyclerView.ViewHolder> adapter = new RecyclerView.Adapter<>() {
             @Override
@@ -138,24 +178,53 @@ final class AppPicker {
         new Thread(() -> {
             PackageManager pm = activity.getPackageManager();
             List<App> apps = new ArrayList<>();
-            for (ApplicationInfo ai : pm.getInstalledApplications(0)) {
-                if (ai.packageName.equals(activity.getPackageName())) continue;
-                boolean sys = (ai.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0
-                        && pm.getLaunchIntentForPackage(ai.packageName) == null;
-                String label = String.valueOf(ai.loadLabel(pm));
-                apps.add(new App(ai.packageName, label, ai.loadIcon(pm), sys,
-                        AppGroups.of(ai.packageName, label, ai)));
+            String err = null;
+            int user = 0;
+            try {
+                for (ApplicationInfo ai : pm.getInstalledApplications(0)) {
+                    if (ai.packageName.equals(activity.getPackageName())) continue;
+                    try { // 1 app lỗi (label/icon hỏng) không được làm hỏng cả danh sách
+                        boolean sys = (ai.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0
+                                && pm.getLaunchIntentForPackage(ai.packageName) == null;
+                        if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) == 0) user++;
+                        String label = String.valueOf(ai.loadLabel(pm));
+                        Drawable icon;
+                        try {
+                            icon = ai.loadIcon(pm);
+                        } catch (Throwable t) {
+                            icon = pm.getDefaultActivityIcon();
+                        }
+                        apps.add(new App(ai.packageName, label, icon, sys,
+                                AppGroups.of(ai.packageName, label, ai)));
+                    } catch (Throwable ignored) {
+                    }
+                }
+                // Theo nhóm; trong nhóm app đang chọn lên đầu, còn lại theo tên
+                apps.sort((a, b) -> {
+                    int g = a.group.compareTo(b.group);
+                    if (g != 0) return g;
+                    int s = Boolean.compare(!current.contains(a.pkg), !current.contains(b.pkg));
+                    return s != 0 ? s : a.label.compareToIgnoreCase(b.label);
+                });
+            } catch (Throwable t) {
+                err = "Không đọc được danh sách ứng dụng: " + t.getClass().getSimpleName() + ": " + t.getMessage();
             }
-            // Theo nhóm; trong nhóm app đang chọn lên đầu, còn lại theo tên
-            apps.sort((a, b) -> {
-                int g = a.group.compareTo(b.group);
-                if (g != 0) return g;
-                int s = Boolean.compare(!current.contains(a.pkg), !current.contains(b.pkg));
-                return s != 0 ? s : a.label.compareToIgnoreCase(b.label);
-            });
+            String msg = err;
+            if (msg == null && needsMiuiPerm(activity)) {
+                msg = "GMS Fix chưa được phép đọc danh sách ứng dụng nên chỉ thấy app hệ thống. Vào Cài đặt → Ứng dụng → "
+                        + "GMS Fix → Quyền ứng dụng (Quyền khác) → bật \"Đọc danh sách ứng dụng đã cài\", rồi mở lại.";
+            } else if (msg == null && user == 0) {
+                msg = "Không thấy app nào do bạn cài — ROM đang ẩn danh sách ứng dụng với GMS Fix. Kiểm tra quyền "
+                        + "\"Đọc danh sách ứng dụng đã cài\" trong Cài đặt → Ứng dụng → GMS Fix.";
+            }
+            String fmsg = msg;
             main.post(() -> {
                 all.addAll(apps);
                 loading.setVisibility(View.GONE);
+                if (fmsg != null) {
+                    note.setText(fmsg);
+                    note.setVisibility(View.VISIBLE);
+                }
                 filter.run();
             });
         }).start();

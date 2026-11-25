@@ -1308,4 +1308,11 @@ public class MainActivity extends AppCompatActivity {
     private int dp(int v) {
         return Math.round(v * getResources().getDisplayMetrics().density);
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @androidx.annotation.NonNull String[] permissions,
+                                           @androidx.annotation.NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        AppPicker.onPermissionResult(requestCode);
+    }
 }
