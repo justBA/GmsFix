@@ -15,7 +15,7 @@ App Android giúp **thông báo (FCM) không bị HyperOS chặn**: không bị 
 | Nguyên nhân | Hậu quả |
 |---|---|
 | **Greezer** (bộ đóng băng của `miui-services`) đóng băng app nền, và đóng băng cả GMS (GMS nằm cứng trong `greezer_power_black_list`) | Mất kết nối FCM, tin tới app bị giữ lại |
-| **Sleep mode** ban đêm (~01:00–05:30, chỉ ROM CN) đóng băng cả app trong danh sách No Restrictions | Mất tin ban đêm. Muốn sửa tận gốc thì cần root |
+| **Sleep mode / Nighttime mode** ban đêm (~01:00–05:30, khi phát hiện bạn ngủ): PowerKeeper **tắt 4G + Wi‑Fi** và Greezer đóng băng cả app trong No Restrictions | FCM mất kết nối hàng giờ, tin tới dồn lúc sáng. **Đã xử lý:** tắt *Pin → Additional features → Nighttime mode* (tuỳ chọn *Ban đêm* của app tự giữ nó tắt). Tắt xong thì Greezer cũng không vào sleep mode nữa, **không cần root** |
 | **Deep doze rất gắt**: tắt màn hình là Quick Doze, ngủ sâu sau ~1 phút, khoảng thức gom tin 1 → 6 giờ | Tin ưu tiên thường bị máy chủ giữ lại tới 1–6 giờ |
 | **Vuốt app khỏi đa nhiệm = force-stop** (`SwipeUpClean`, `OneKeyClean`, `GameClean`) | App bị dừng hẳn, GMS bỏ tin (`Failed to broadcast to stopped app`) cho tới khi mở lại app |
 | **PowerKeeper** ghi đè `MILLET_NO_RESTRICT_APP` từ cài đặt pin mỗi khi khởi động lại hoặc đổi chế độ pin | Các thiết lập ghi bằng lệnh bị mất |
@@ -46,6 +46,9 @@ Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riên
   - **Tự ghi lại nếu bị đổi**: cloud hoặc HyperOS đổi lại thì app tự ghi lại.
   - **Mọi app có FCM** (mặc định bật): ngoài danh sách đã chọn, thêm mọi app có receiver c2dm. App mới cài tự được thêm. Bấm "xem ›" để xem danh sách.
 - **Nới deep doze**: Settings.Global `device_idle_constants`. Ngủ sâu sau 2 phút, thức gom tin mỗi 15 → 30 phút. Tin ưu tiên thường trễ tối đa ~30 phút, thay vì 1–6 giờ. Nút ⓘ cho xem giá trị đang dùng và giá trị mặc định của HyperOS.
+- **Ban đêm (sleep mode)** (mặc định bật, đã kiểm chứng đêm 24→25/11):
+  - Tắt **Nighttime mode**: Settings.Secure `sec_pc_config_scenario_policies_open = 0`. App ghi bằng quyền của nó (**không cần Shizuku**) và tự tắt lại mỗi lần đánh thức GMS hoặc khởi động máy nếu bị bật lại.
+  - Thêm Google Play services + GMS Fix vào `cloud_aurogon_alarm_allow_list`, để alarm heartbeat/đánh thức được đi qua khi đang bị đóng băng. Phần này cần Shizuku. Kiểm tra cài đặt sẽ báo nếu bị đặt lại.
 
 **Cảnh báo** (mỗi loại bật/tắt riêng, áp dụng cho app trong danh sách và mọi app có FCM):
 - **Mất thông báo**: GMS bỏ tin vì app đang bị dừng.
@@ -54,7 +57,9 @@ Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riên
 - **App tắt thông báo**.
 - Trang **Log** riêng, có lọc theo loại và ghi rõ tên app.
 
-**Trạng thái:** kết nối FCM, thống kê 24 giờ (số lần rớt, tin trễ, lâu nhất), kiểm tra cài đặt, Shizuku, root, Developer options. Có widget hiển thị trạng thái FCM.
+**Trạng thái:** kết nối FCM, thống kê 24 giờ, kiểm tra cài đặt, Shizuku, root, Developer options. Có widget hiển thị trạng thái FCM.
+- **FCM 24 giờ qua** ghi dạng `Rớt 10 (2 lâu) • trễ 22 (0 đáng lo)`. Con số đầu là của GMS, đếm cả lần đổi Wi‑Fi ↔ 4G (rớt 0 giây) và tin ưu tiên cao trễ 1–2 giây, nên luôn lớn hơn log cảnh báo. Trong ngoặc là phần đáng chú ý: rớt quá 1 phút, tin ưu tiên cao trễ quá 2 phút, tin thường trễ quá 35 phút. Nhãn màu bên phải dựa trên phần này.
+- **Log cảnh báo** ghi theo giờ máy. Giờ trong chẩn đoán của GMS là UTC, app tự đổi.
 
 **Fix ngay** (cần Shizuku hoặc root). Các bước:
 1. No Restrictions theo 2 mức
@@ -64,14 +69,15 @@ Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riên
 5. Cho phép chạy nền
 6. Dữ liệu nền
 7. Standby bucket
-8. Tự khởi chạy (MIUI appop 10008)
+8. Tự khởi chạy (MIUI appop 10008 + 10053, công tắc)
 9. Cấp quyền cho GMS Fix (`WRITE_SECURE_SETTINGS`, `DUMP`, usage access, exact alarm)
 10. **Bỏ trạng thái dừng** cho app trong danh sách và mọi app có FCM
-11. Kiểm tra lại
+11. Ban đêm (sleep mode), nếu bật
+12. Kiểm tra lại
 
 Xong thì app tự tắt Developer options, nếu tuỳ chọn đó đang bật.
 
-**Sau khi khởi động lại máy:** app tự áp dụng lại phần Greezer (bằng quyền `DUMP`), `aurogon_enable` và doze, **không cần Shizuku**. Riêng Google Play services bị PowerKeeper xoá khỏi No Restrictions, nên app sẽ nhắc bấm Fix.
+**Sau khi khởi động lại máy:** app tự áp dụng lại phần Greezer (bằng quyền `DUMP`), `aurogon_enable`, doze và tắt Nighttime mode, **không cần Shizuku**. Riêng Google Play services bị PowerKeeper xoá khỏi No Restrictions, nên app sẽ nhắc bấm Fix.
 
 ### 2. Chỉnh bằng theme (thử nghiệm)
 
@@ -89,11 +95,52 @@ Tạo file `.mtz` ẩn (`Download/GmsFix-FCM.mtz`) để ghi đè `theme_values.
 - Quick Doze bỏ qua `inactive_to` và motion. `quick_doze_delay_to` có tác dụng nhưng bị giới hạn ~2 phút. `idle_to`/`max_idle_to` có tác dụng.
 - Shizuku 13.6 trên ROM này **không lưu** lựa chọn "Allow all the time", nên mỗi lần Fix có thể phải bấm Allow lại.
 - Tự khởi chạy **không** cứu được app đã bị dừng hẳn, vì GMS tự bỏ tin trước. Nó chỉ cần cho app bị giết tiến trình nhưng không bị force-stop.
+- MIUI appop `10053` là trạng thái công tắc Tự khởi chạy. Fix đặt cùng `10008`. Trước khi sửa, 24 app bị lệch (10008 cho phép, 10053 chặn).
+- Exit-info của máy: **SwipeUpClean 202, OneKeyClean 145, GameClean 108** lần force-stop. Vuốt đóng app, "dọn tất cả" và Game Turbo đều force-stop thật.
+- Sleep mode đêm 23→24/11: `SLEEP_MODE enter/exit` (01:15–03:54, 04:15–05:30) **khớp chính xác** với GMS `ERR_NET_DOWN`. Nguyên nhân: **PowerKeeper tắt dữ liệu di động** (`Set user data enabled to false … callingPackage=com.miui.powerkeeper`) **và tắt Wi‑Fi** (`CMD_WIFI_TOGGLED`, WorkSource `com.miui.powerkeeper`), rồi bật lại khi ra sleep mode. Tuỳ chọn trong giao diện: *Pin → Additional features → Nighttime mode* = Settings.Secure `sec_pc_config_scenario_policies_open`. Sleep mode cũng đóng băng chính GMS Fix, nên "Đánh thức GMS" gần như không chạy được cả đêm.
+- `cloud_sleepmode_networkpolicy_enabled` **không** phải thứ cắt mạng. Theo mã ROM (`MiuiNetworkPolicyManagerService.sleepModeEnableControl`), nhánh đó chỉ bật khi giá trị là `"on"` **và** `key_open_earthquake_warning == 1`, mà trên máy là 0. Danh sách `mSleepModeWhitelistUids` (thêm qua `IMiuiNetworkManager.onSleepModeWhitelistChange`, mã giao dịch 5) thuộc nhánh này, nên cũng không có tác dụng.
+- Broadcast heartbeat (`GTALK_HEARTBEAT`, `MCS_HEARTBEAT`) **không ổn định**: một lần trùng với heartbeat, thử lại 3 lần không có tác dụng. Không dùng.
+- Tin của app chat bị cập nhật im lặng (Zalo gộp tin trong ~10 giây, KChat `onlyAlertOnce`, Instagram `groupAlertBehavior=SUMMARY`) là do app, không phải do máy.
+
+---
+
+### Tự kiểm tra mất mạng ban đêm trên máy khác
+
+Sáng hôm sau, cắm adb rồi chạy:
+
+```bash
+# PowerKeeper có tắt Wi‑Fi không (dòng CMD_WIFI_TOGGLED ... WorkSource{1000 com.miui.powerkeeper})
+adb shell dumpsys wifi | grep -E "CMD_WIFI_TOGGLED.*powerkeeper"
+# PowerKeeper có tắt dữ liệu di động không
+adb shell dumpsys activity service com.android.phone | grep -E "user data enabled.*powerkeeper"
+# Giờ vào/ra sleep mode của Greezer
+adb shell dumpsys greezer | grep "SLEEP_MODE"
+# GMS mất mạng lúc nào, bao lâu
+adb shell dumpsys activity service com.google.android.gms/.gcm.GcmService | grep -A2 "INCIDENT"
+# Nighttime mode đang bật (1) hay tắt (0)
+adb shell settings get secure sec_pc_config_scenario_policies_open
+```
+
+Nếu giờ Wi‑Fi/4G bị tắt khớp với `SLEEP_MODE: enter` và GMS báo `ERR_NET_DOWN`, thì đó là Nighttime mode.
+
+---
+
+## Đang thử nghiệm
+
+| Thử nghiệm | Đã làm | Kết quả tới giờ | Trạng thái |
+|---|---|---|---|
+| **GMS + GMS Fix vào `cloud_aurogon_alarm_allow_list`** | Ghi bằng adb 23/11 lúc 23:2x (giữ 3 mục mặc định của ROM). Ngày 24/11 đưa vào app | ✅ **Có tác dụng**: 05:20 ngày 24/11, GMS được mở băng với lý do `alarm`, lần đầu tiên thấy (trước đó 0 lần). Sau khi tắt Nighttime mode thì GMS không còn bị đóng băng ban đêm, nên danh sách này giờ là lớp dự phòng | Đã vào app (tuỳ chọn *Ban đêm*) |
+| **Tắt Nighttime mode** (`sec_pc_config_scenario_policies_open = 0`) | Tắt trong giao diện 24/11 lúc 06:2x. App tự giữ (đã thử: bật lại bằng adb thì app tự tắt) | ✅ **Đêm 24→25/11:** PowerKeeper không tắt 4G/Wi‑Fi lần nào, Greezer **không vào `SLEEP_MODE`**, FCM **không rớt** từ 15:00 tới 06:00, GMS bị đóng băng **0 giây**, "Đánh thức GMS" 117/118 lần OK, không tin ưu tiên cao nào bị trễ. So với đêm 23→24: mất mạng 2 giờ 39 phút + 71 phút, Zalo trễ 36 phút | Đã vào app (tuỳ chọn *Ban đêm*) |
+| `cloud_sleepmode_networkpolicy_enabled=off` | Ghi bằng adb 24/11 lúc 05:5x | ❌ Không liên quan (nhánh cần cảnh báo động đất bật). Đã trả về `on` | Bỏ |
+| Danh sách giữ mạng khi sleep mode (`mSleepModeWhitelistUids`) | Đọc mã ROM: thêm qua `IMiuiNetworkManager.onSleepModeWhitelistChange`, mã giao dịch 5 | ❌ Thuộc nhánh NetworkPolicy đang không chạy (cần `key_open_earthquake_warning=1`). Thêm vào cũng không giúp, có khi còn bật nhánh giới hạn mạng cho app khác | Bỏ |
+| Chia 2 mức + "Mọi app có FCM" | Đưa vào app 23/11 | ✅ Messenger và Facebook bắt đầu bị đóng băng (trước đây 0 giây) mà vẫn nhận tin FCM. Danh sách mở băng có 116 app (~7 KB trong `aurogon_enable`) | ⏳ Chưa xác nhận Greezer đọc đủ 116 app: cần thấy app ngoài 34 app được mở băng `reason : broadcast` khi có tin |
+| Theme `.mtz` sửa danh sách của ROM | Tạo được file | ❌ App Themes kiểm tra DRM | Dừng, không vượt DRM |
 
 ---
 
 ## Khuyến nghị khi dùng
 
+- **Tắt Nighttime mode**: *Cài đặt → Pin → Additional features → Nighttime mode*. Tuỳ chọn này tắt 4G và Wi‑Fi khi máy phát hiện bạn ngủ, nên mọi thông báo ban đêm đều tới trễ tới sáng. Tuỳ chọn *Ban đêm* của app tự giữ nó tắt. Đổi lại pin ban đêm tốn hơn.
 - **Đừng vuốt app chat hoặc ngân hàng khỏi đa nhiệm**, đừng bấm "dọn tất cả". Trên ROM này hai thao tác đó là force-stop. Có thể khoá app trong đa nhiệm.
 - Thấy cảnh báo **Mất thông báo** thì mở app đó lên một lần, hoặc bấm **Fix ngay**.
 - App ở mức "Chỉ khi có tin" thì để cài đặt pin là **Battery saver (recommended)**. Nếu không, PowerKeeper sẽ thêm lại app vào No Restrictions.
@@ -121,6 +168,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 | `NoRestrictGuard` | 2 mức, `MILLET_NO_RESTRICT_APP`, mở trang cài đặt pin |
 | `BroadcastCtrl` | `aurogon_enable` / `broadcastctrl`, danh sách mọi app có FCM |
 | `DozeTune` | `device_idle_constants` (nới deep doze) |
+| `SleepGuard` | Ban đêm: Nighttime mode (`sec_pc_config_scenario_policies_open`), `cloud_aurogon_alarm_allow_list` |
 | `KeepAlive` | Báo thức đánh thức GMS định kỳ, tự áp dụng lại cài đặt |
 | `BootReceiver` | Áp dụng lại sau khi khởi động máy |
 | `FcmStatus` | Đọc `dumpsys GcmService`: kết nối, thống kê 24 giờ |

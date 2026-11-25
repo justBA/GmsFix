@@ -34,6 +34,13 @@ final class FcmStatus {
 
     /** Thống kê 24h từ "Enhanced GcmService Diagnostics" (-1 = GMS không cung cấp). */
     int conns24 = -1, drops24 = -1, delayed24 = -1, maxLatSec24 = -1;
+    /** Trong các sự cố/tin trễ GMS còn giữ (tối đa 10 mục mỗi loại, 24 giờ gần nhất): rớt > 1 phút, tin cần chú ý. */
+    int longDrops = -1, seriousDelays = -1;
+
+    private static final Pattern INCIDENT = Pattern.compile(
+            "\\[INCIDENT #\\d+] (\\d{2}-\\d{2} \\d{2}:\\d{2}):\\d{2}\\.\\d+ UTC \\(Duration: (\\d+)s");
+    private static final Pattern DELAY = Pattern.compile(
+            "(\\d{2}-\\d{2} \\d{2}:\\d{2}):\\d{2}\\.\\d+ \\[MSG_DELAYED] id=\\S+ pkg=\\S+ pri=(\\w+)\\s+Total Delay: (\\d+)ms");
 
     private static final Pattern HOURLY = Pattern.compile(
             "(?m)^\\s*\\d{2}-\\d{2} \\d{2}:00 \\|\\s*(\\d+) \\|\\s*(\\d+) \\|\\s*\\S+\\s*\\|\\s*\\d+ \\|\\s*(\\d+) \\|\\s*(\\d+)s \\|");
@@ -41,7 +48,21 @@ final class FcmStatus {
     /** Dòng tóm tắt 24h, null nếu không có dữ liệu. */
     String stats24() {
         if (conns24 < 0) return null;
-        return drops24 + " lần rớt • " + delayed24 + " tin trễ • lâu nhất " + (maxLatSec24 / 60) + " phút";
+        // GMS đếm cả lần đổi Wi-Fi↔4G (rớt 0 giây) và tin ưu tiên cao trễ chỉ 1–2 giây → ghi rõ phần đáng chú ý
+        if (longDrops < 0) return "Rớt " + drops24 + " • trễ " + delayed24;
+        return "Rớt " + drops24 + " (" + longDrops + " lâu) • trễ " + delayed24 + " (" + seriousDelays + " đáng lo)";
+    }
+
+    /** "11-24 02:59" (UTC) → epoch ms; 0 nếu lỗi. */
+    static long utcMillis(String mmddhhmm) {
+        try {
+            java.text.SimpleDateFormat f = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US);
+            f.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            java.util.Date d = f.parse(java.util.Calendar.getInstance().get(java.util.Calendar.YEAR) + "-" + mmddhhmm);
+            return d == null ? 0 : d.getTime();
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     String label() {
@@ -133,6 +154,22 @@ final class FcmStatus {
             st.drops24 += Integer.parseInt(hm.group(2));
             st.delayed24 += Integer.parseInt(hm.group(3));
             st.maxLatSec24 = Math.max(st.maxLatSec24, Integer.parseInt(hm.group(4)));
+        }
+        if (st.conns24 >= 0) {
+            long cutoff = System.currentTimeMillis() - 24 * 3600_000L;
+            st.longDrops = 0;
+            Matcher im = INCIDENT.matcher(out);
+            while (im.find()) {
+                if (utcMillis(im.group(1)) >= cutoff && Long.parseLong(im.group(2)) > 60) st.longDrops++;
+            }
+            st.seriousDelays = 0;
+            Matcher dm = DELAY.matcher(out);
+            while (dm.find()) {
+                long ms = Long.parseLong(dm.group(3));
+                boolean serious = "HIGH".equals(dm.group(2)) ? ms > AlertCenter.DELAY_THRESHOLD_MS
+                        : ms > AlertCenter.NORMAL_DELAY_THRESHOLD_MS;
+                if (serious && utcMillis(dm.group(1)) >= cutoff) st.seriousDelays++;
+            }
         }
         return st;
     }

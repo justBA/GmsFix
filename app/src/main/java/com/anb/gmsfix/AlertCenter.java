@@ -114,9 +114,9 @@ final class AlertCenter {
             String id = "D" + m.group(2), pkg = m.group(3);
             long ms = Long.parseLong(m.group(5));
             if (ms < DELAY_THRESHOLD_MS || !wanted.contains(pkg) || !seen.add(id)) continue;
-            // giờ trong phần chẩn đoán là UTC
+            // giờ trong phần chẩn đoán của GMS là UTC → đổi sang giờ máy
             String line = HealthCheck.label(pm, pkg) + ": trễ " + (ms / 60000) + " phút (nguyên nhân "
-                    + cause(m.group(6)) + ", lúc " + m.group(1) + " UTC)";
+                    + cause(m.group(6)) + ", lúc " + utcToLocal(m.group(1)) + ")";
             if ("HIGH".equals(m.group(4))) delayed.add(line);
             else if (ms > NORMAL_DELAY_THRESHOLD_MS) delayedQuiet.add(line);
         }
@@ -130,7 +130,7 @@ final class AlertCenter {
             StringBuilder sb = new StringBuilder();
             for (Map.Entry<String, List<String>> e : lost.entrySet()) {
                 sb.append("• ").append(HealthCheck.label(pm, e.getKey())).append(": ")
-                        .append(e.getValue().size()).append(" tin (").append(e.getValue().get(0)).append(")\n");
+                        .append(e.getValue().size()).append(" tin (").append(localFmt(e.getValue().get(0))).append(")\n");
             }
             raise(ctx, Type.LOST, lost.size() + " app bị mất thông báo", sb.toString().trim()
                     + "\nMở app đó lên 1 lần, hoặc Fix ngay để bỏ trạng thái dừng.");
@@ -234,10 +234,42 @@ final class AlertCenter {
         p.edit().putString("alertHist", String.join("\n", h)).apply();
     }
 
-    /** Mới nhất trước. Mỗi dòng: "dd/MM HH:mm • <loại>: <nội dung>". */
+    private static final Pattern UTC_TIME = Pattern.compile("(\\d{2}-\\d{2} \\d{2}:\\d{2}) UTC");
+
+    /** "11-24 06:59" (giờ máy, dạng trong log sự kiện GcmService) → "06:59 24/11". */
+    static String localFmt(String mmddhhmm) {
+        String[] p = mmddhhmm.split("[- ]");
+        return p.length == 3 ? p[2] + " " + p[1] + "/" + p[0] : mmddhhmm;
+    }
+
+    /** "11-23 13:05" (UTC, dạng trong dumpsys GcmService) → "20:05 23/11" theo giờ máy. */
+    static String utcToLocal(String mmddhhmm) {
+        try {
+            SimpleDateFormat in = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
+            in.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            java.util.Calendar now = java.util.Calendar.getInstance();
+            Date d = in.parse(now.get(java.util.Calendar.YEAR) + "-" + mmddhhmm);
+            if (d != null && d.getTime() > now.getTimeInMillis() + 86_400_000L) { // qua năm mới
+                d = in.parse((now.get(java.util.Calendar.YEAR) - 1) + "-" + mmddhhmm);
+            }
+            return d == null ? mmddhhmm + " UTC" : new SimpleDateFormat("HH:mm dd/MM", Locale.getDefault()).format(d);
+        } catch (Exception e) {
+            return mmddhhmm + " UTC";
+        }
+    }
+
+    /** Mới nhất trước. Mỗi dòng: "dd/MM HH:mm • <loại>: <nội dung>". Mục cũ ghi giờ UTC được đổi sang giờ máy. */
     static List<String> historyList(Context ctx) {
         List<String> h = new ArrayList<>(Arrays.asList(prefs(ctx).getString("alertHist", "").split("\n")));
         h.removeIf(String::isEmpty);
+        for (int i = 0; i < h.size(); i++) {
+            Matcher m = UTC_TIME.matcher(h.get(i));
+            if (!m.find()) continue;
+            StringBuffer sb = new StringBuffer();
+            do m.appendReplacement(sb, Matcher.quoteReplacement(utcToLocal(m.group(1)))); while (m.find());
+            m.appendTail(sb);
+            h.set(i, sb.toString());
+        }
         return h;
     }
 
