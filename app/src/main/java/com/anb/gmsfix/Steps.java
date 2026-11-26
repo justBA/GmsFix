@@ -137,12 +137,16 @@ final class Steps {
         // Không force-stop: mọi thiết lập ở trên có hiệu lực ngay, còn force-stop để lại cờ "stopped"
         // → GMS bỏ tin FCM ("Failed to broadcast to stopped app"). Chỉ gỡ cờ stopped cho app đang bị dừng
         // và đọc lại để xác nhận — thất bại thì báo lỗi, không che.
-        StringBuilder us = new StringBuilder("rc=0\nisstop() { dumpsys package \"$1\" | grep -m1 -q 'stopped=true'; }\n");
+        // Chỉ xét người dùng hiện tại: máy có Dual apps / Second space (user 999, 10…) thì app ở user kia có thể
+        // "stopped=true" mãi → báo sai "vẫn bị dừng". Đọc hết output (không grep -m1) và bỏ stderr, vì dumpsys
+        // của HyperOS in "[writeDump] write ERROR: Broken pipe" khi bị cắt ngang.
+        StringBuilder us = new StringBuilder("rc=0\nU=$(am get-current-user 2>/dev/null); U=${U:-0}\n"
+                + "isstop() { dumpsys package \"$1\" 2>/dev/null | grep -E \"^ +User $U:\" | grep -q 'stopped=true'; }\n");
         // cả app có FCM ngoài danh sách ("Mọi app có FCM"): app bị dừng thì GMS bỏ tin, Greezer không cứu được
         java.util.Set<String> unstop = new java.util.LinkedHashSet<>(pkgs);
         for (String p : unstopAlso) if (p.matches("[A-Za-z0-9_.]+")) unstop.add(p);
         for (String p : unstop) {
-            us.append("if isstop ").append(p).append("; then cmd package unstop ").append(p).append(" >/dev/null 2>&1; ")
+            us.append("if isstop ").append(p).append("; then cmd package unstop --user $U ").append(p).append(" >/dev/null 2>&1; ")
                     .append("if isstop ").append(p).append("; then echo '").append(p).append(I18n.t(": vẫn bị dừng — mở app 1 lần'; rc=1; "))
                     .append("else echo '").append(p).append(I18n.t(": đã bỏ trạng thái dừng'; fi; fi\n"));
         }
