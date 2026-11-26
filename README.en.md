@@ -29,7 +29,17 @@ Download `GmsFix-3.0.2.apk` from [Releases](https://github.com/justBA/GmsFix/rel
 
 **3. Install and start Shizuku**
 - Download Shizuku from [GitHub](https://github.com/RikkaApps/Shizuku/releases) (the test phone uses 13.6.0).
-- Open Shizuku → **Start via Wireless debugging** → pair using the code in the notification, following Shizuku's instructions. Or, with a computer, run the command Shizuku shows under *Start via adb*, for example:
+- **Pair Shizuku via Wireless debugging (once, no computer needed):**
+  1. Connect to **Wi-Fi** (any network, internet not required).
+  2. Allow Shizuku's **notifications**: the pairing code is typed right into its notification.
+  3. *Settings → Additional settings → Developer options* → turn on **Wireless debugging**. When asked "Allow wireless debugging on this network?", choose **Allow** (tick "Always allow on this network" so it won't ask again).
+  4. Open Shizuku → *Start via Wireless debugging* → tap **Pairing**. Shizuku shows a notification "Searching for pairing service…".
+  5. Go back to *Wireless debugging* → tap **Pair device with pairing code**. A **6-digit code** appears. Keep this dialog open.
+  6. Pull down the notification shade → Shizuku's notification → **Enter pairing code** → type the 6 digits → send. "Pairing successful" means done. A "Shizuku" entry appears under *Paired devices* in *Wireless debugging*.
+  7. Back in Shizuku → tap **Start**. The status changes to *Shizuku is running*.
+  - No notification to type the code into: check Shizuku's notification permission, or use split screen (Shizuku + Settings) and redo steps 4–6.
+  - **No need to pair again** afterwards: just have Wi-Fi + Wireless debugging on and tap Start. GMS Fix turns Wireless debugging on and opens Shizuku when you press Fix now.
+- With a computer, you can start Shizuku over a cable instead, running the command Shizuku shows under *Start via adb*, for example:
   ```bash
   adb shell 'sh -c "$(pm path moe.shizuku.privileged.api | cut -d: -f2 | sed s/base.apk//)lib/arm64/libshizuku.so"'
   ```

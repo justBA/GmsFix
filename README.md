@@ -30,7 +30,17 @@ Tải `GmsFix-3.0.2.apk` ở [Releases](https://github.com/justBA/GmsFix/release
 
 **3. Cài và khởi động Shizuku**
 - Tải Shizuku ở [GitHub](https://github.com/RikkaApps/Shizuku/releases) (máy thử dùng 13.6.0).
-- Mở Shizuku → **Start via Wireless debugging** → ghép nối (pairing) bằng mã trong thông báo, theo hướng dẫn trong Shizuku. Hoặc nếu có máy tính, chạy lệnh mà Shizuku hiện ở mục *Start via adb*, ví dụ:
+- **Ghép nối Shizuku qua Wireless debugging (làm 1 lần, không cần máy tính):**
+  1. Kết nối **Wi-Fi** (mạng nào cũng được, không cần internet).
+  2. Cho phép **thông báo** của Shizuku: mã ghép nối được nhập ngay trong thông báo của nó.
+  3. *Cài đặt → Cài đặt bổ sung → Tùy chọn nhà phát triển* → bật **Wireless debugging (Gỡ lỗi không dây)**. Hỏi "Cho phép gỡ lỗi không dây trên mạng này?" thì chọn **Cho phép** (tick "Luôn cho phép trên mạng này" để lần sau khỏi hỏi).
+  4. Mở Shizuku → mục *Start via Wireless debugging* → bấm **Pairing**. Shizuku hiện một thông báo "Đang tìm dịch vụ ghép nối…".
+  5. Quay lại *Wireless debugging* → bấm **Pair device with pairing code (Ghép nối thiết bị bằng mã)**. Màn hình hiện **mã 6 số**. Đừng tắt hộp thoại này.
+  6. Kéo thanh thông báo xuống → thông báo của Shizuku → **Enter pairing code** → nhập 6 số → gửi. Thấy "Ghép nối thành công" là xong. Trong *Wireless debugging* sẽ có thiết bị "Shizuku" ở mục *Paired devices*.
+  7. Quay lại Shizuku → bấm **Start**. Dòng trạng thái đổi thành *Shizuku is running*.
+  - Không thấy thông báo để nhập mã: kiểm tra lại quyền thông báo của Shizuku, hoặc chia đôi màn hình (Shizuku + Cài đặt) rồi làm lại bước 4–6.
+  - Từ lần sau **không cần ghép nối lại**: chỉ cần Wi-Fi + Wireless debugging bật rồi bấm Start. GMS Fix tự bật Wireless debugging và mở Shizuku khi bạn bấm Fix ngay.
+- Nếu có máy tính, có thể khởi động Shizuku bằng cáp, chạy lệnh mà Shizuku hiện ở mục *Start via adb*, ví dụ:
   ```bash
   adb shell 'sh -c "$(pm path moe.shizuku.privileged.api | cut -d: -f2 | sed s/base.apk//)lib/arm64/libshizuku.so"'
   ```
