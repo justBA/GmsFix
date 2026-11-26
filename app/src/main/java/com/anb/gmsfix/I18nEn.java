@@ -381,7 +381,7 @@ final class I18nEn {
     private static void pReady() {
         MAP.put("Ứng dụng", "Apps");
         MAP.put("chưa cài hoặc bị tắt", "not installed or disabled");
-        MAP.put("chưa cài — cần để bấm Fix (không cần nếu có root)", "not installed — needed for Fix (not needed with root)");
+        MAP.put("chưa cài — cần để cấp quyền (không cần nếu có root)", "not installed — needed to grant permissions (not needed with root)");
         MAP.put("Đang chạy", "Running");
         MAP.put("không cần — máy có root", "not needed — device is rooted");
         MAP.put("chưa chạy — bấm Fix ngay, app sẽ bật Developer và mở Shizuku", "not running — tap Fix now, the app will enable Developer options and open Shizuku");
@@ -395,10 +395,10 @@ final class I18nEn {
         MAP.put("không (không bắt buộc)", "no (optional)");
         MAP.put("Quyền của GMS Fix", "GMS Fix permissions");
         MAP.put("FCM mở băng app, doze, Ban đêm, tắt/bật Developer", "FCM thaw, doze, Night, Developer options toggle");
-        MAP.put("bấm Fix ngay (Shizuku) để cấp", "tap Fix now (Shizuku) to grant");
+        MAP.put("cấp tự động qua Shizuku", "granted automatically via Shizuku");
         MAP.put("; Xiaomi cần bật USB debugging (Security settings) trước", "; Xiaomi needs USB debugging (Security settings) enabled first");
         MAP.put("đọc trạng thái FCM, Greezer, kiểm tra cài đặt", "read FCM/Greezer status, settings check");
-        MAP.put("bấm Fix ngay để cấp", "tap Fix now to grant");
+        MAP.put("cấp tự động qua Shizuku", "granted automatically via Shizuku");
         MAP.put("đọc FCM không cần Shizuku", "read FCM without Shizuku");
         MAP.put("Thông báo", "Notifications");
         MAP.put("cảnh báo mất/trễ tin", "lost/delayed message alerts");
@@ -422,8 +422,8 @@ final class I18nEn {
         MAP.put("✓ có • ✗ thiếu (bắt buộc) • ⚠ nên bật • ? chưa biết", "✓ ok • ✗ missing (required) • ⚠ recommended • ? unknown");
     }
     private static void pPre() {
-        MAP.put("chưa chạy — Fix ngay sẽ tự bật Developer và mở Shizuku", "not running — Fix now turns on Developer options and opens Shizuku");
-        MAP.put("chưa — Fix ngay sẽ hỏi Allow", "not yet — Fix now will ask you to Allow");
+        MAP.put("chưa chạy — app tự bật Developer và mở Shizuku khi cần", "not running — the app turns on Developer options and opens Shizuku when needed");
+        MAP.put("chưa — Shizuku sẽ hỏi Allow khi cần", "not yet — Shizuku will ask you to Allow when needed");
         MAP.put(" mục đạt", " items OK");
         MAP.put("Không có Google Play services", "Google Play services missing");
         MAP.put("Máy chưa cài hoặc đang tắt Google Play services — không có FCM để giữ.", "Google Play services is not installed or is disabled — there is no FCM to keep alive.");
@@ -457,6 +457,6 @@ final class I18nEn {
         MAP.put("đã kết nối — bật được Wireless debugging", "connected — Wireless debugging can be enabled");
         MAP.put("chưa kết nối — không bật được Wireless debugging để khởi động Shizuku", "not connected — Wireless debugging (to start Shizuku) can't be enabled");
         MAP.put("đang bật", "on");
-        MAP.put("đang tắt — Fix ngay sẽ tự bật", "off — Fix now turns it on");
+        MAP.put("đang tắt — app tự bật khi cần", "off — the app turns it on when needed");
     }
 }

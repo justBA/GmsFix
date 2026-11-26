@@ -727,7 +727,6 @@ public class MainActivity extends AppCompatActivity {
                         .setTitle(r.title)
                         .setView(readyBox)
                         .setPositiveButton(I18n.t("Đóng"), null)
-                        .setNeutralButton(I18n.t("Fix ngay"), (d, w) -> onFixClicked())
                         .show();
             });
         }).start();

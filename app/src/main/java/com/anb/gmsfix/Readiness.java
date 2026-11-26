@@ -188,7 +188,7 @@ final class Readiness {
         String shz = version(pm, SHIZUKU_PKG);
         boolean rooted = Boolean.TRUE.equals(Shell.rootKnown());
         o.item(shz != null || rooted, false, "Shizuku", shz != null ? shz
-                : rooted ? I18n.t("không cần — máy có root") : I18n.t("chưa cài — cần để bấm Fix (không cần nếu có root)"));
+                : rooted ? I18n.t("không cần — máy có root") : I18n.t("chưa cài — cần để cấp quyền (không cần nếu có root)"));
         o.help(I18n.t("Shizuku cho GMS Fix chạy lệnh với quyền adb mà không cần root.\n\n1. Tải bản mới nhất ở GitHub (RikkaApps/Shizuku) và cài\n2. Bật Developer options → Wireless debugging\n3. Mở Shizuku → ghép nối (lần đầu) → Start\n4. Quay lại bấm Fix ngay"), ACT_GET_SHIZUKU);
         o.item(true, true, "GMS Fix", version(pm, self));
 
@@ -199,7 +199,7 @@ final class Readiness {
         if (!alive) {
             // Fix ngay tự bật Developer + mở Shizuku → không tính là thiếu (dòng xám)
             o.item(rooted ? Boolean.TRUE : null, false, I18n.t("Đang chạy"), rooted ? I18n.t("không cần — máy có root")
-                    : I18n.t("chưa chạy — Fix ngay sẽ tự bật Developer và mở Shizuku"));
+                    : I18n.t("chưa chạy — app tự bật Developer và mở Shizuku khi cần"));
             o.help(I18n.t("Shizuku dừng mỗi khi khởi động lại máy hoặc tắt Wireless debugging.\n\nCách bật lại: bấm Fix ngay (app tự bật Developer options rồi mở Shizuku), trong Shizuku bấm Start, quay lại app — Fix tự chạy tiếp.\n\nLần đầu: Developer options → Wireless debugging → mở Shizuku → ghép nối bằng mã."), ACT_SHIZUKU);
             if (!rooted) {
                 boolean wifi = wifiConnected(ctx);
@@ -208,7 +208,7 @@ final class Readiness {
                 o.help(I18n.t(WIFI_HELP), ACT_WIFI);
                 boolean adbw = adbWifiOn(ctx);
                 o.item(adbw ? Boolean.TRUE : null, false, "Wireless debugging", adbw ? I18n.t("đang bật")
-                        : I18n.t("đang tắt — Fix ngay sẽ tự bật"));
+                        : I18n.t("đang tắt — app tự bật khi cần"));
             }
         } else {
             int uid = -1, api = -1;
@@ -223,7 +223,7 @@ final class Readiness {
             o.item(true, false, I18n.t("Đang chạy"), I18n.t("quyền: ") + level + (api > 0 ? " • API " + api : ""));
             boolean g = Shell.shizukuGranted();
             o.item(g ? Boolean.TRUE : null, false, I18n.t("GMS Fix được cấp quyền"), g ? null
-                    : I18n.t("chưa — Fix ngay sẽ hỏi Allow"));
+                    : I18n.t("chưa — Shizuku sẽ hỏi Allow khi cần"));
             o.help(I18n.t("Bấm Fix ngay và chọn Allow khi Shizuku hỏi.\n\nNếu trước đây đã từ chối (Shizuku không hỏi nữa): mở Shizuku → Ứng dụng được ủy quyền (Authorized applications) → bật GMS Fix.\n\nHyperOS 4 CN: Shizuku không nhớ \"Allow all the time\", mỗi lần Fix có thể phải bấm Allow lại."), ACT_SHIZUKU);
         }
 
@@ -233,12 +233,12 @@ final class Readiness {
         boolean wss = granted(ctx, Manifest.permission.WRITE_SECURE_SETTINGS);
         String adbSec = prop("persist.security.adbinput");
         o.item(wss, true, "WRITE_SECURE_SETTINGS", wss ? I18n.t("FCM mở băng app, doze, Ban đêm, tắt/bật Developer")
-                : I18n.t("bấm Fix ngay (Shizuku) để cấp")
+                : I18n.t("cấp tự động qua Shizuku")
                 + ("1".equals(adbSec) ? "" : I18n.t("; Xiaomi cần bật USB debugging (Security settings) trước")));
         o.help(grantHelp + "adb shell pm grant " + self + " android.permission.WRITE_SECURE_SETTINGS",
                 adbSec != null && !adbSec.isEmpty() && !"1".equals(adbSec) ? ACT_DEV_SETTINGS : ACT_FIX);
         boolean dump = granted(ctx, Manifest.permission.DUMP);
-        o.item(dump, true, "DUMP", dump ? I18n.t("đọc trạng thái FCM, Greezer, kiểm tra cài đặt") : I18n.t("bấm Fix ngay để cấp"));
+        o.item(dump, true, "DUMP", dump ? I18n.t("đọc trạng thái FCM, Greezer, kiểm tra cài đặt") : I18n.t("cấp tự động qua Shizuku"));
         o.help(grantHelp + "adb shell pm grant " + self + " android.permission.DUMP", ACT_FIX);
         boolean usage = false;
         try {
@@ -250,7 +250,7 @@ final class Readiness {
                     || (mode == AppOpsManager.MODE_DEFAULT && granted(ctx, Manifest.permission.PACKAGE_USAGE_STATS));
         } catch (Throwable ignored) {
         }
-        o.item(usage, false, "Usage access", usage ? I18n.t("đọc FCM không cần Shizuku") : I18n.t("bấm Fix ngay để cấp"));
+        o.item(usage, false, "Usage access", usage ? I18n.t("đọc FCM không cần Shizuku") : I18n.t("cấp tự động qua Shizuku"));
         o.help(I18n.t("Bật GMS Fix trong Quyền truy cập dữ liệu sử dụng (Usage access), hoặc bấm Fix ngay khi có Shizuku.\n\nMáy tính:\nadb shell pm grant ") + self
                 + " android.permission.PACKAGE_USAGE_STATS\nadb shell cmd appops set " + self + " GET_USAGE_STATS allow", ACT_USAGE);
         boolean notif = Build.VERSION.SDK_INT < 33 || granted(ctx, Manifest.permission.POST_NOTIFICATIONS);
@@ -263,7 +263,7 @@ final class Readiness {
             } catch (Throwable ignored) {
             }
         }
-        o.item(exact, false, "Exact alarm", exact ? I18n.t("đánh thức GMS đúng giờ") : I18n.t("bấm Fix ngay để cấp"));
+        o.item(exact, false, "Exact alarm", exact ? I18n.t("đánh thức GMS đúng giờ") : I18n.t("cấp tự động qua Shizuku"));
         o.help(I18n.t("Cho phép \"Báo thức & lời nhắc\" (Alarms & reminders) cho GMS Fix, hoặc bấm Fix ngay khi có Shizuku. Thiếu thì Đánh thức GMS chạy lệch giờ."), ACT_EXACT);
         if (AppPicker.miuiPermExists(ctx)) {
             boolean apps = !AppPicker.needsMiuiPerm(ctx);
