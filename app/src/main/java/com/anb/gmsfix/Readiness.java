@@ -189,7 +189,7 @@ final class Readiness {
         boolean rooted = Boolean.TRUE.equals(Shell.rootKnown());
         o.item(shz != null || rooted, false, "Shizuku", shz != null ? shz
                 : rooted ? I18n.t("không cần — máy có root") : I18n.t("chưa cài — cần để cấp quyền (không cần nếu có root)"));
-        o.help(I18n.t("Shizuku cho GMS Fix chạy lệnh với quyền adb mà không cần root.\n\n1. Tải bản mới nhất ở GitHub (RikkaApps/Shizuku) và cài\n2. Bật Developer options → Wireless debugging\n3. Mở Shizuku → ghép nối (lần đầu) → Start\n4. Quay lại bấm Fix ngay"), ACT_GET_SHIZUKU);
+        o.help(I18n.t("Shizuku cho GMS Fix chạy lệnh với quyền adb mà không cần root.\n\n1. Tải Shizuku từ Google Play hoặc GitHub (RikkaApps/Shizuku) và cài\n2. Bật Developer options → Wireless debugging\n3. Mở Shizuku → ghép nối (lần đầu) → Start\n4. Quay lại bấm Fix ngay"), ACT_GET_SHIZUKU);
         o.item(true, true, "GMS Fix", version(pm, self));
 
         // ---- Shizuku ----
