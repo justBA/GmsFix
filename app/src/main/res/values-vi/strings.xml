@@ -3,13 +3,13 @@
     <string name="widget_desc">Trạng thái kết nối FCM và nút Fix nhanh</string>
     <string name="widget_label">GMS Fix – FCM</string>
     <string name="home_sub">Giữ thông báo (FCM) không bị HyperOS chặn. Chọn 1 cách:</string>
-    <string name="home_both">Có thể dùng cả 2 cùng lúc: theme sửa gốc rễ trong ROM, Giữ FCM sống là lớp dự phòng.</string>
+    <string name="home_both">Hiện chỉ “Giữ FCM sống” hoạt động. Cách theme đang bị app Theme chặn (DRM), giữ lại để tham khảo.</string>
     <string name="back">Quay lại</string>
     <string name="alert_history">Lịch sử cảnh báo</string>
     <string name="clear_all">Xoá hết</string>
     <string name="no_alerts">Chưa có cảnh báo nào</string>
     <string name="theme_title">Chỉnh bằng theme</string>
-    <string name="theme_sub">Sửa danh sách đóng băng cứng trong ROM</string>
+    <string name="theme_sub">Chưa hoạt động — app Theme chặn theme không chính chủ (DRM)</string>
     <string name="theme_status">Trạng thái theme</string>
     <string name="refresh">Làm mới</string>
     <string name="theme_install">Cài theme</string>
@@ -52,9 +52,10 @@
     <string name="alerts_sub">Báo khi app trong danh sách gặp vấn đề</string>
     <string name="recent">Gần đây</string>
     <string name="dev_desc">Thủ công. Bật: bật Developer + Wireless debugging rồi mở Shizuku. Tắt: tắt hết debugging (Shizuku sẽ dừng).</string>
-    <string name="dev_on">Bật + mở Shizuku</string>
+    <string name="dev_on">Bật + Shizuku</string>
     <string name="off">Tắt</string>
     <string name="search_hint">Tìm theo tên hoặc package</string>
     <string name="show_system">Hiện app hệ thống</string>
     <string name="lang_short">🌐 VI</string>
+    <string name="lang_code" translatable="false">vi</string>
 </resources>

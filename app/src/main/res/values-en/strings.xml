@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_desc">FCM connection status and a quick Fix button</string>
+    <string name="widget_label">GMS Fix – FCM</string>
+    <string name="home_sub">Keep notifications (FCM) from being blocked by HyperOS. Pick a method:</string>
+    <string name="home_both">Only “Keep FCM alive” works for now. The theme method is blocked by the Themes app (DRM) and is kept for reference.</string>
+    <string name="back">Back</string>
+    <string name="alert_history">Alert history</string>
+    <string name="clear_all">Clear all</string>
+    <string name="no_alerts">No alerts yet</string>
+    <string name="theme_title">Fix via theme</string>
+    <string name="theme_sub">Not working yet — the Themes app blocks unofficial themes (DRM)</string>
+    <string name="theme_status">Theme status</string>
+    <string name="refresh">Refresh</string>
+    <string name="theme_install">Install theme</string>
+    <string name="pick_apps">Choose apps</string>
+    <string name="theme_shared_list">Shares the list with “Keep FCM alive”. If you change the list, create the theme file again and re-import it.</string>
+    <string name="theme_remove">Remove theme</string>
+    <string name="theme_remove_desc">Open the Themes app, apply the default theme again and reboot — everything goes back to normal.</string>
+    <string name="theme_advanced">▸ Advanced: theme reverts to default by itself?</string>
+    <string name="theme_advanced_desc">The Themes app may restore the default theme for unofficial themes. Removing the Themes app (for the current user only) keeps the theme. Reinstall any time with Rollback. Needs Shizuku or root.</string>
+    <string name="theme_uninstall_app">Remove Themes app</string>
+    <string name="theme_rollback">Rollback: reinstall</string>
+    <string name="theme_how">How it works: HyperOS Greezer (CN ROM) reads its freeze list from ROM resources, and GMS is hardcoded in the blacklist. MIUI themes may override these resources. The theme file only contains theme_values.xml — the look doesn\'t change.</string>
+    <string name="reading">Reading…</string>
+    <string name="fix_now_bolt">⚡ Fix now</string>
+    <string name="always_bg">Always in background</string>
+    <string name="status">Status</string>
+    <string name="apps_applied">Apps</string>
+    <string name="tier_hint">Orange ⚡ = always in background. Grey ⚡ = only on message: may be frozen to save battery, thawed when an FCM message arrives. Tap ⚡ to change (opens the app\'s battery settings). Long-press an app to remove it.</string>
+    <string name="no_apps">No apps chosen</string>
+    <string name="fix_now">Fix now</string>
+    <string name="result">Result</string>
+    <string name="full_log">View full log</string>
+    <string name="options">Options</string>
+    <string name="auto_dev_off">Turn off Developer options after fixing</string>
+    <string name="auto_dev_off_sub">So banking apps and VNeID work normally</string>
+    <string name="boot_fix">Re-fix after reboot</string>
+    <string name="boot_fix_sub">No Shizuku needed, only reminds you if it can\'t</string>
+    <string name="wake_gms">Wake GMS periodically</string>
+    <string name="wake_gms_sub">On battery with the screen off</string>
+    <string name="bc_title">Let FCM thaw frozen apps</string>
+    <string name="bc_sub">FCM messages arrive even at night</string>
+    <string name="bc_guard">Re-apply if changed</string>
+    <string name="bc_guard_sub">When HyperOS or the cloud reverts it</string>
+    <string name="bc_all">All apps with FCM</string>
+    <string name="bc_all_sub">Not only apps in the list</string>
+    <string name="doze_title">Relax deep doze</string>
+    <string name="explain">Explain</string>
+    <string name="night_title">Night (sleep mode)</string>
+    <string name="alerts">Alerts</string>
+    <string name="alerts_sub">Notify when an app in the list has a problem</string>
+    <string name="recent">Recent</string>
+    <string name="dev_desc">Manual. On: enables Developer options + Wireless debugging, then opens Shizuku. Off: turns off all debugging (Shizuku will stop).</string>
+    <string name="dev_on">On + Shizuku</string>
+    <string name="off">Off</string>
+    <string name="search_hint">Search by name or package</string>
+    <string name="show_system">Show system apps</string>
+    <string name="lang_short">🌐 EN</string>
+    <string name="lang_code" translatable="false">en</string>
+</resources>

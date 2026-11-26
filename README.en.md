@@ -83,7 +83,7 @@ With Developer options off and Shizuku not running, these **still work**: period
 
 ## Features
 
-The home screen offers 2 approaches, each on its own screen.
+The home screen offers 2 approaches, each on its own screen. **Only approach 1 works for now**; approach 2 (theme) does not work yet.
 
 ### 1. Keep FCM alive (daily use)
 
@@ -137,11 +137,11 @@ When done, the app turns Developer options off, if that option is on.
 
 **After a reboot:** the app re-applies the Greezer part (with the `DUMP` permission), `aurogon_enable`, doze, and turns Nighttime mode off, **no Shizuku needed**. Only Google Play services gets removed from No Restrictions by PowerKeeper, so the app reminds you to press Fix.
 
-### 2. Theme-based tweak (experimental)
+### 2. Theme-based tweak — ⚠️ NOT WORKING YET
 
 Creates a hidden `.mtz` file (`Download/GmsFix-FCM.mtz`) that overrides `theme_values.xml` of `android.miui`: removes GMS from Greezer's blacklist and adds apps to whitelists. Includes a button to remove or restore the Themes app (optional, with rollback).
 
-**Currently blocked:** the Themes app (both CN 11.5.6 and Global) checks DRM when applying (`DRM_ERROR_RIGHT_FILE_NOT_EXISTS`). This project does **not** bypass DRM.
+**Not working yet — don't rely on it instead of section 1.** Reason: the Themes app (both CN 11.5.6 and Global) checks DRM when applying (`DRM_ERROR_RIGHT_FILE_NOT_EXISTS`). This project does **not** bypass DRM.
 
 ---
 

@@ -3,13 +3,13 @@
     <string name="widget_desc">FCM connection status and a quick Fix button</string>
     <string name="widget_label">GMS Fix – FCM</string>
     <string name="home_sub">Keep notifications (FCM) from being blocked by HyperOS. Pick a method:</string>
-    <string name="home_both">You can use both at once: the theme fixes the root cause in the ROM, Keep FCM alive is the backup layer.</string>
+    <string name="home_both">Only “Keep FCM alive” works for now. The theme method is blocked by the Themes app (DRM) and is kept for reference.</string>
     <string name="back">Back</string>
     <string name="alert_history">Alert history</string>
     <string name="clear_all">Clear all</string>
     <string name="no_alerts">No alerts yet</string>
     <string name="theme_title">Fix via theme</string>
-    <string name="theme_sub">Edit the ROM\'s hardcoded freeze list</string>
+    <string name="theme_sub">Not working yet — the Themes app blocks unofficial themes (DRM)</string>
     <string name="theme_status">Theme status</string>
     <string name="refresh">Refresh</string>
     <string name="theme_install">Install theme</string>
@@ -52,9 +52,10 @@
     <string name="alerts_sub">Notify when an app in the list has a problem</string>
     <string name="recent">Recent</string>
     <string name="dev_desc">Manual. On: enables Developer options + Wireless debugging, then opens Shizuku. Off: turns off all debugging (Shizuku will stop).</string>
-    <string name="dev_on">Enable + open Shizuku</string>
+    <string name="dev_on">On + Shizuku</string>
     <string name="off">Off</string>
     <string name="search_hint">Search by name or package</string>
     <string name="show_system">Show system apps</string>
     <string name="lang_short">🌐 EN</string>
+    <string name="lang_code" translatable="false">en</string>
 </resources>

@@ -47,6 +47,7 @@ public class ThemeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         DynamicColors.applyToActivityIfAvailable(this);
         super.onCreate(savedInstanceState);
+        I18n.sync(this);
         setContentView(R.layout.activity_theme);
         prefs = getSharedPreferences("gmsfix", MODE_PRIVATE);
 

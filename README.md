@@ -84,7 +84,7 @@ Khi Developer options tắt và Shizuku không chạy, **vẫn hoạt động**:
 
 ## Tính năng
 
-Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riêng.
+Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riêng. **Hiện chỉ hướng 1 hoạt động**; hướng 2 (theme) chưa hoạt động.
 
 ### 1. Giữ FCM sống (dùng hằng ngày)
 
@@ -138,11 +138,11 @@ Xong thì app tự tắt Developer options, nếu tuỳ chọn đó đang bật.
 
 **Sau khi khởi động lại máy:** app tự áp dụng lại phần Greezer (bằng quyền `DUMP`), `aurogon_enable`, doze và tắt Nighttime mode, **không cần Shizuku**. Riêng Google Play services bị PowerKeeper xoá khỏi No Restrictions, nên app sẽ nhắc bấm Fix.
 
-### 2. Chỉnh bằng theme (thử nghiệm)
+### 2. Chỉnh bằng theme — ⚠️ CHƯA HOẠT ĐỘNG
 
 Tạo file `.mtz` ẩn (`Download/GmsFix-FCM.mtz`) để ghi đè `theme_values.xml` của `android.miui`: bỏ GMS khỏi danh sách đen của Greezer, thêm app vào các whitelist. Có nút gỡ hoặc khôi phục app Themes (tuỳ chọn, có rollback).
 
-**Hiện bị chặn:** app Themes (cả bản CN 11.5.6 lẫn bản Global) kiểm tra DRM khi áp dụng theme (`DRM_ERROR_RIGHT_FILE_NOT_EXISTS`). Dự án này **không** vượt DRM.
+**Chưa hoạt động, đừng dùng để thay cho mục 1.** Lý do: app Themes (cả bản CN 11.5.6 lẫn bản Global) kiểm tra DRM khi áp dụng theme (`DRM_ERROR_RIGHT_FILE_NOT_EXISTS`). Dự án này **không** vượt DRM.
 
 ---
 

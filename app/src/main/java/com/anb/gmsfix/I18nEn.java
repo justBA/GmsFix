@@ -76,9 +76,9 @@ final class I18nEn {
         MAP.put(" giờ", " h");
         MAP.put(" giây", " s");
         MAP.put("Rớt ", "Dropped ");
-        MAP.put(" • trễ ", " • delayed ");
-        MAP.put(" lâu) • trễ ", " long) • delayed ");
-        MAP.put(" đáng lo)", " worrying)");
+        MAP.put(" • trễ ", " • late ");
+        MAP.put(" lâu) • trễ ", " long) • late ");
+        MAP.put(" đáng lo)", " bad)");
         MAP.put("Đã kết nối", "Connected");
         MAP.put("Mất kết nối", "Disconnected");
         MAP.put("Không chạy", "Not running");
@@ -108,7 +108,8 @@ final class I18nEn {
         MAP.put("Miễn hạn chế pin/Doze/đóng băng cho app đã chọn, tự đánh thức GMS định kỳ khi dùng pin, ", "Exempts chosen apps from battery/Doze/freeze limits, wakes GMS periodically on battery, ");
         MAP.put("tự fix lại sau khi khởi động lại.", "re-fixes after reboot.");
         MAP.put("Chỉnh bằng theme", "Fix via theme");
-        MAP.put("Sửa gốc rễ • thử nghiệm", "Root-cause fix • experimental");
+        MAP.put("Chưa hoạt động • thử nghiệm", "Not working yet • experimental");
+        MAP.put("Hiện chưa hoạt động: app Theme chặn theme không chính chủ (DRM).", "Not working yet: the Themes app blocks unofficial themes (DRM).");
         MAP.put("Theme ẩn (không đổi giao diện) ghi đè danh sách cứng của ROM: bỏ GMS khỏi danh sách đen, ", "Hidden theme (no look change) overrides the ROM's hardcoded list: removes GMS from the blacklist, ");
         MAP.put("app đã chọn không bị đóng băng kể cả sleep mode ban đêm.", "chosen apps are never frozen, even in night sleep mode.");
         MAP.put(" app • đánh thức GMS: ", " app(s) • wake GMS: ");

@@ -32,6 +32,7 @@ public class AlertLogActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         DynamicColors.applyToActivityIfAvailable(this);
         super.onCreate(savedInstanceState);
+        I18n.sync(this);
         setContentView(R.layout.activity_alert_log);
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 

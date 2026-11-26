@@ -34,7 +34,7 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         DynamicColors.applyToActivityIfAvailable(this);
         super.onCreate(savedInstanceState);
-        if (I18n.restartIfChanged(this)) return;
+        I18n.sync(this);
         setContentView(R.layout.activity_home);
         findViewById(R.id.btnLang).setOnClickListener(v -> chooseLanguage());
         prefs = getSharedPreferences("gmsfix", MODE_PRIVATE);
@@ -52,9 +52,9 @@ public class HomeActivity extends AppCompatActivity {
                         + I18n.t("tự fix lại sau khi khởi động lại."),
                 MainActivity.class);
         statusTheme = setupFeature(R.id.featTheme, R.drawable.ic_palette, I18n.t("Chỉnh bằng theme"),
-                I18n.t("Sửa gốc rễ • thử nghiệm"),
+                I18n.t("Chưa hoạt động • thử nghiệm"),
                 I18n.t("Theme ẩn (không đổi giao diện) ghi đè danh sách cứng của ROM: bỏ GMS khỏi danh sách đen, ")
-                        + I18n.t("app đã chọn không bị đóng băng kể cả sleep mode ban đêm."),
+                        + I18n.t("app đã chọn không bị đóng băng kể cả sleep mode ban đêm.") + "\n" + I18n.t("Hiện chưa hoạt động: app Theme chặn theme không chính chủ (DRM)."),
                 ThemeActivity.class);
     }
 

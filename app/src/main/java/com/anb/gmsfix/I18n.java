@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.os.Build;
 import android.os.LocaleList;
 
@@ -42,11 +41,17 @@ final class I18n {
         return prefs(ctx).getString(PREF, "");
     }
 
-    /** Ngôn ngữ thực dùng: "vi" hoặc "en" (máy không phải tiếng Việt → English). */
+    /** Ngôn ngữ thực dùng: lấy từ resource đang được chọn (values-vi → "vi", còn lại "en") để chữ trong mã luôn khớp layout. */
     static String effective(Context ctx) {
-        String s = chosen(ctx);
-        if (s.isEmpty()) s = Resources.getSystem().getConfiguration().getLocales().get(0).getLanguage();
-        return "vi".equals(s) ? "vi" : "en";
+        if (Build.VERSION.SDK_INT < 33) {
+            String c = prefs(ctx).getString(PREF, "");
+            if (!c.isEmpty()) return c; // AppCompat chỉ đổi locale cho Activity, context ứng dụng thì không
+        }
+        try {
+            return ctx.getString(R.string.lang_code);
+        } catch (Throwable t) {
+            return "vi";
+        }
     }
 
     static void init(Context ctx) {
@@ -69,11 +74,9 @@ final class I18n {
         return s != null ? s : vi;
     }
 
-    /** Activity gọi trong onCreate: ngôn ngữ bị đổi từ Cài đặt hệ thống trong lúc app chạy → khởi động lại. */
-    static boolean restartIfChanged(Activity a) {
-        if ("en".equals(effective(a)) == en) return false;
-        restart(a);
-        return true;
+    /** Activity gọi trong onCreate: theo ngôn ngữ resource của Activity (đổi từ Cài đặt hệ thống lúc app đang chạy). */
+    static void sync(Activity a) {
+        en = "en".equals(effective(a));
     }
 
     static void set(Activity a, String lang) {
