@@ -28,7 +28,10 @@ Download `GmsFix-3.0.3.apk` from [Releases](https://github.com/justBA/GmsFix/rel
 - **Wireless debugging**, if you use Shizuku without a computer.
 
 **3. Install and start Shizuku**
-- Download Shizuku from [GitHub](https://github.com/RikkaApps/Shizuku/releases) (the test phone uses 13.6.0).
+- Get Shizuku, either way (the test phone uses 13.6.0):
+  - **Google Play**: [Shizuku on Google Play](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) — updates automatically. CN ROMs often don't have the Google Play Store; use this if you do.
+  - **GitHub**: [RikkaApps/Shizuku/releases](https://github.com/RikkaApps/Shizuku/releases) → download the latest `.apk` under *Assets* and install it (allow "Install unknown apps" if asked).
+  - The *Get Shizuku* button in GMS Fix opens Google Play if available, otherwise GitHub.
 - **Pair Shizuku via Wireless debugging (once, no computer needed):**
   1. Connect to **Wi-Fi** (any network, internet not required).
   2. Allow Shizuku's **notifications**: the pairing code is typed right into its notification.

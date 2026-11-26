@@ -643,7 +643,7 @@ public class MainActivity extends AppCompatActivity {
                     onFixClicked();
                     return;
                 case Readiness.ACT_GET_SHIZUKU:
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_URL)));
+                    openShizukuDownload();
                     return;
                 case Readiness.ACT_SHIZUKU:
                     if (Shell.shizukuAlive() && !Shell.shizukuGranted() && !Shizuku.shouldShowRequestPermissionRationale()) {
@@ -1231,7 +1231,7 @@ public class MainActivity extends AppCompatActivity {
         else if (b.action == Readiness.ACT_WIFI) d.setPositiveButton(I18n.t("Mở Cài đặt"), (x, w) -> runReadyAction(Readiness.ACT_WIFI));
         else if (b.action == Readiness.ACT_SHIZUKU) d.setPositiveButton(I18n.t("Mở Shizuku"), (x, w) -> openShizuku());
         else if (b.action == Readiness.ACT_GET_SHIZUKU) d.setPositiveButton(I18n.t("Tải Shizuku"), (x, w) ->
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_URL))));
+                openShizukuDownload());
         d.show();
     }
 
@@ -1423,6 +1423,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /** Google Play nếu máy có Play Store, không thì trang Releases trên GitHub. */
+    private void openShizukuDownload() {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + SHIZUKU_PKG))
+                    .setPackage("com.android.vending"));
+            return;
+        } catch (ActivityNotFoundException ignored) {
+        }
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_URL)));
+    }
+
     private void openShizuku() {
         Intent i = getPackageManager().getLaunchIntentForPackage(SHIZUKU_PKG);
         if (i == null) {
@@ -1431,7 +1442,7 @@ public class MainActivity extends AppCompatActivity {
                     .setTitle(I18n.t("Chưa cài Shizuku"))
                     .setMessage(I18n.t("Cài Shizuku để app có quyền chạy lệnh (không cần root)."))
                     .setPositiveButton(I18n.t("Tải Shizuku"), (d, w) ->
-                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_URL))))
+                            openShizukuDownload())
                     .setNegativeButton(I18n.t("Đóng"), null)
                     .show();
             return;
