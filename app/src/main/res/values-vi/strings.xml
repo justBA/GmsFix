@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_desc">Trạng thái kết nối FCM và nút Fix nhanh</string>
+    <string name="widget_label">GMS Fix – FCM</string>
+    <string name="home_sub">Giữ thông báo (FCM) không bị HyperOS chặn. Chọn 1 cách:</string>
+    <string name="home_both">Hiện chỉ “Giữ FCM sống” hoạt động. Cách theme đang bị app Theme chặn (DRM), giữ lại để tham khảo.</string>
+    <string name="back">Quay lại</string>
+    <string name="alert_history">Lịch sử cảnh báo</string>
+    <string name="clear_all">Xoá hết</string>
+    <string name="no_alerts">Chưa có cảnh báo nào</string>
+    <string name="theme_title">Chỉnh bằng theme</string>
+    <string name="theme_sub">Chưa hoạt động — app Theme chặn theme không chính chủ (DRM)</string>
+    <string name="theme_status">Trạng thái theme</string>
+    <string name="refresh">Làm mới</string>
+    <string name="theme_install">Cài theme</string>
+    <string name="pick_apps">Chọn app</string>
+    <string name="theme_shared_list">Dùng chung danh sách với “Giữ FCM sống”. Đổi danh sách thì tạo lại file theme và nhập lại.</string>
+    <string name="theme_remove">Gỡ theme</string>
+    <string name="theme_remove_desc">Vào app Theme áp dụng lại theme mặc định rồi khởi động lại máy — mọi thứ về như cũ.</string>
+    <string name="theme_advanced">▸ Nâng cao: theme bị tự trả về mặc định?</string>
+    <string name="theme_advanced_desc">App Theme có thể tự khôi phục theme mặc định với theme không chính chủ. Gỡ app Theme (chỉ cho người dùng hiện tại) giữ theme lại. Cài lại bất cứ lúc nào bằng Rollback. Cần Shizuku hoặc root.</string>
+    <string name="theme_uninstall_app">Gỡ app Theme</string>
+    <string name="theme_rollback">Rollback: cài lại</string>
+    <string name="theme_how">Cách hoạt động: Greezer của HyperOS (ROM CN) đọc danh sách đóng băng từ resource của ROM, và GMS bị ghi cứng trong danh sách đen. Theme MIUI được phép ghi đè resource này. File theme chỉ chứa theme_values.xml — không đổi giao diện.</string>
+    <string name="reading">Đang đọc…</string>
+    <string name="fix_now_bolt">⚡ Fix ngay</string>
+    <string name="always_bg">Luôn chạy nền</string>
+    <string name="status">Trạng thái</string>
+    <string name="apps_applied">Ứng dụng áp dụng</string>
+    <string name="tier_hint">⚡ cam = luôn chạy nền. ⚡ xám = chỉ khi có tin: được đóng băng cho đỡ pin, có tin FCM thì mở băng. Bấm ⚡ để đổi (mở cài đặt pin của app). Nhấn giữ app để xoá.</string>
+    <string name="no_apps">Chưa chọn app nào</string>
+    <string name="fix_now">Fix ngay</string>
+    <string name="result">Kết quả</string>
+    <string name="full_log">Xem log đầy đủ</string>
+    <string name="options">Tùy chọn</string>
+    <string name="auto_dev_off">Tự tắt Developer sau khi fix</string>
+    <string name="auto_dev_off_sub">Để app ngân hàng, VNeID chạy bình thường</string>
+    <string name="boot_fix">Tự fix lại sau khi khởi động</string>
+    <string name="boot_fix_sub">Không cần Shizuku, chỉ nhắc nếu không làm được</string>
+    <string name="wake_gms">Đánh thức GMS định kỳ</string>
+    <string name="wake_gms_sub">Khi dùng pin và tắt màn hình</string>
+    <string name="bc_title">Cho FCM đánh thức app bị đóng băng</string>
+    <string name="bc_sub">Tin FCM đến ngay cả ban đêm</string>
+    <string name="bc_guard">Tự ghi lại nếu bị đổi</string>
+    <string name="bc_guard_sub">Khi HyperOS hoặc cloud đổi lại</string>
+    <string name="bc_all">Mọi app có FCM</string>
+    <string name="bc_all_sub">Không chỉ app trong danh sách</string>
+    <string name="doze_title">Nới deep doze</string>
+    <string name="explain">Giải thích</string>
+    <string name="night_title">Ban đêm (sleep mode)</string>
+    <string name="alerts">Cảnh báo</string>
+    <string name="alerts_sub">Báo khi app trong danh sách gặp vấn đề</string>
+    <string name="recent">Gần đây</string>
+    <string name="dev_desc">Thủ công. Bật: bật Developer + Wireless debugging rồi mở Shizuku. Tắt: tắt hết debugging (Shizuku sẽ dừng).</string>
+    <string name="dev_on">Bật + Shizuku</string>
+    <string name="off">Tắt</string>
+    <string name="search_hint">Tìm theo tên hoặc package</string>
+    <string name="show_system">Hiện app hệ thống</string>
+    <string name="lang_short">🌐 VI</string>
+    <string name="lang_code" translatable="false">vi</string>
+    <string name="ready_check">Kiểm tra điều kiện</string>
+</resources>

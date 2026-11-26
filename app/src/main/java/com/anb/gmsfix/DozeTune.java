@@ -38,7 +38,7 @@ final class DozeTune {
     }
 
     static boolean wanted(Context ctx) {
-        return prefs(ctx).getBoolean(PREF_ON, false);
+        return prefs(ctx).getBoolean(PREF_ON, true);
     }
 
     static String current(Context ctx) {
@@ -125,7 +125,7 @@ final class DozeTune {
             long quick = ms(out, "quick_doze_delay_to");
             long idle = ms(out, "idle_to"), max = ms(out, "max_idle_to");
             if (quick < 0 || idle < 0 || max < 0) return null;
-            return "ngủ sâu sau " + human(Math.min(quick, 120000)) + " • thức mỗi " + human(idle) + "–" + human(max);
+            return I18n.t("ngủ sâu sau ") + human(Math.min(quick, 120000)) + I18n.t(" • thức mỗi ") + human(idle) + "–" + human(max);
         } catch (Throwable t) {
             return null;
         }
@@ -133,14 +133,14 @@ final class DozeTune {
 
     /** Khoá, tên dễ hiểu, mặc định HyperOS (ms), có tác dụng trên HyperOS không (đo 2026-11-23). */
     static final Object[][] KEYS = {
-            {"quick_doze_delay_to", "Tắt màn hình → ngủ sâu (Quick Doze)", 60000L, true},
-            {"idle_to", "Khoảng thức gom tin lần đầu", 3600000L, true},
-            {"max_idle_to", "Khoảng thức gom tin tối đa", 21600000L, true},
-            {"inactive_to", "Chờ trước khi đếm (doze thường)", 15000L, false},
-            {"idle_after_inactive_to", "Nằm yên trước khi ngủ sâu", 15000L, false},
-            {"motion_inactive_to", "Sau khi bị cầm lên", 30000L, false},
-            {"sensing_to", "Dò chuyển động", 15000L, false},
-            {"locating_to", "Dò vị trí", 5000L, false},
+            {"quick_doze_delay_to", I18n.t("Tắt màn hình → ngủ sâu (Quick Doze)"), 60000L, true},
+            {"idle_to", I18n.t("Khoảng thức gom tin lần đầu"), 3600000L, true},
+            {"max_idle_to", I18n.t("Khoảng thức gom tin tối đa"), 21600000L, true},
+            {"inactive_to", I18n.t("Chờ trước khi đếm (doze thường)"), 15000L, false},
+            {"idle_after_inactive_to", I18n.t("Nằm yên trước khi ngủ sâu"), 15000L, false},
+            {"motion_inactive_to", I18n.t("Sau khi bị cầm lên"), 30000L, false},
+            {"sensing_to", I18n.t("Dò chuyển động"), 15000L, false},
+            {"locating_to", I18n.t("Dò vị trí"), 5000L, false},
     };
 
     /** Giá trị đang dùng thật cho từng khoá trong KEYS (ms, -1 nếu không đọc được). null = không có DUMP. */
@@ -155,9 +155,9 @@ final class DozeTune {
     static String human(long ms) {
         if (ms < 0) return "?";
         long s = ms / 1000, h = s / 3600, mi = (s % 3600) / 60;
-        if (h > 0) return mi > 0 ? h + " giờ " + mi + " phút" : h + " giờ";
-        if (mi > 0) return mi + " phút";
-        return s + " giây";
+        if (h > 0) return mi > 0 ? h + I18n.t(" giờ ") + mi + I18n.t(" phút") : h + I18n.t(" giờ");
+        if (mi > 0) return mi + I18n.t(" phút");
+        return s + I18n.t(" giây");
     }
 
     /** "+5m0s0ms" → 300000 ms; -1 nếu không có. */

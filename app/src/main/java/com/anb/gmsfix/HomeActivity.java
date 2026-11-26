@@ -34,25 +34,27 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         DynamicColors.applyToActivityIfAvailable(this);
         super.onCreate(savedInstanceState);
+        I18n.sync(this);
         setContentView(R.layout.activity_home);
+        findViewById(R.id.btnLang).setOnClickListener(v -> chooseLanguage());
         prefs = getSharedPreferences("gmsfix", MODE_PRIVATE);
 
         View row = LayoutInflater.from(this).inflate(R.layout.item_status, findViewById(R.id.fcmRow), false);
-        ((TextView) row.findViewById(R.id.label)).setText("Kết nối FCM");
+        ((TextView) row.findViewById(R.id.label)).setText(I18n.t("Kết nối FCM"));
         fcmPill = row.findViewById(R.id.pill);
         fcmSub = row.findViewById(R.id.sub);
         row.setOnClickListener(v -> refreshFcm());
         ((LinearLayout) findViewById(R.id.fcmRow)).addView(row);
 
-        statusFcm = setupFeature(R.id.featFcm, R.drawable.ic_bolt, "Giữ FCM sống",
-                "Không cần root • dùng hằng ngày",
-                "Miễn hạn chế pin/Doze/đóng băng cho app đã chọn, tự đánh thức GMS định kỳ khi dùng pin, "
-                        + "tự fix lại sau khi khởi động lại.",
+        statusFcm = setupFeature(R.id.featFcm, R.drawable.ic_bolt, I18n.t("Giữ FCM sống"),
+                I18n.t("Không cần root • dùng hằng ngày"),
+                I18n.t("Miễn hạn chế pin/Doze/đóng băng cho app đã chọn, tự đánh thức GMS định kỳ khi dùng pin, ")
+                        + I18n.t("tự fix lại sau khi khởi động lại."),
                 MainActivity.class);
-        statusTheme = setupFeature(R.id.featTheme, R.drawable.ic_palette, "Chỉnh bằng theme",
-                "Sửa gốc rễ • thử nghiệm",
-                "Theme ẩn (không đổi giao diện) ghi đè danh sách cứng của ROM: bỏ GMS khỏi danh sách đen, "
-                        + "app đã chọn không bị đóng băng kể cả sleep mode ban đêm.",
+        statusTheme = setupFeature(R.id.featTheme, R.drawable.ic_palette, I18n.t("Chỉnh bằng theme"),
+                I18n.t("Chưa hoạt động • thử nghiệm"),
+                I18n.t("Theme ẩn (không đổi giao diện) ghi đè danh sách cứng của ROM: bỏ GMS khỏi danh sách đen, ")
+                        + I18n.t("app đã chọn không bị đóng băng kể cả sleep mode ban đêm.") + "\n" + I18n.t("Hiện chưa hoạt động: app Theme chặn theme không chính chủ (DRM)."),
                 ThemeActivity.class);
     }
 
@@ -85,31 +87,31 @@ public class HomeActivity extends AppCompatActivity {
         int apps = prefs.getStringSet("pkgs", java.util.Collections.emptySet()).size()
                 - prefs.getStringSet("pkgsOff", java.util.Collections.emptySet()).size();
         boolean ka = KeepAlive.enabled(this);
-        setPill(statusFcm, apps + " app • đánh thức GMS: " + (ka ? "bật" : "tắt"), ka ? R.color.ok : R.color.neutral);
+        setPill(statusFcm, apps + I18n.t(" app • đánh thức GMS: ") + (ka ? I18n.t("bật") : I18n.t("tắt")), ka ? R.color.ok : R.color.neutral);
 
         if (!ThemeFix.supported(this)) {
-            setPill(statusTheme, "ROM không hỗ trợ", R.color.err);
+            setPill(statusTheme, I18n.t("ROM không hỗ trợ"), R.color.err);
             return;
         }
         boolean active = ThemeFix.activeInApp(this);
         if (!active) {
-            setPill(statusTheme, "Chưa áp dụng", R.color.neutral);
+            setPill(statusTheme, I18n.t("Chưa áp dụng"), R.color.neutral);
             return;
         }
-        setPill(statusTheme, "Đang kiểm tra…", R.color.neutral);
+        setPill(statusTheme, I18n.t("Đang kiểm tra…"), R.color.neutral);
         boolean hasDump = checkSelfPermission(Manifest.permission.DUMP) == PackageManager.PERMISSION_GRANTED;
         new Thread(() -> {
             Boolean black = hasDump ? ThemeFix.gmsSystemBlack() : null;
             main.post(() -> {
-                if (Boolean.FALSE.equals(black)) setPill(statusTheme, "Đã áp dụng ✓", R.color.ok);
-                else if (Boolean.TRUE.equals(black)) setPill(statusTheme, "Đã áp dụng • cần khởi động lại", R.color.warn);
-                else setPill(statusTheme, "Đã áp dụng", R.color.ok);
+                if (Boolean.FALSE.equals(black)) setPill(statusTheme, I18n.t("Đã áp dụng ✓"), R.color.ok);
+                else if (Boolean.TRUE.equals(black)) setPill(statusTheme, I18n.t("Đã áp dụng • cần khởi động lại"), R.color.warn);
+                else setPill(statusTheme, I18n.t("Đã áp dụng"), R.color.ok);
             });
         }).start();
     }
 
     private void refreshFcm() {
-        setPill(fcmPill, "Đang đọc…", R.color.neutral);
+        setPill(fcmPill, I18n.t("Đang đọc…"), R.color.neutral);
         boolean hasDump = checkSelfPermission(Manifest.permission.DUMP) == PackageManager.PERMISSION_GRANTED;
         new Thread(() -> {
             FcmStatus s = FcmStatus.query(Shell.available(false), hasDump);
@@ -132,5 +134,20 @@ public class HomeActivity extends AppCompatActivity {
         pill.setPadding((int) (12 * d), (int) (4 * d), (int) (12 * d), (int) (4 * d));
         bg.setColor((c & 0x00FFFFFF) | 0x22000000);
         pill.setBackground(bg);
+    }
+
+    private void chooseLanguage() {
+        String[] codes = {"", "vi", "en"};
+        String[] names = {I18n.isEn() ? "System default" : "Theo hệ thống", "Tiếng Việt", "English"};
+        String cur = I18n.chosen(this);
+        int sel = 0;
+        for (int i = 0; i < codes.length; i++) if (codes[i].equals(cur)) sel = i;
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle(I18n.isEn() ? "Language" : "Ngôn ngữ")
+                .setSingleChoiceItems(names, sel, (d, w) -> {
+                    d.dismiss();
+                    if (!codes[w].equals(cur)) I18n.set(this, codes[w]);
+                })
+                .show();
     }
 }

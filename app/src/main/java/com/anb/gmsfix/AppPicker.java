@@ -56,6 +56,15 @@ final class AppPicker {
     static final int PERM_REQ = 1003;
     private static Runnable pending;
 
+    /** ROM có quyền "Đọc danh sách ứng dụng đã cài" của Xiaomi. */
+    static boolean miuiPermExists(android.content.Context ctx) {
+        try {
+            return "com.lbe.security.miui".equals(ctx.getPackageManager().getPermissionInfo(MIUI_PERM, 0).packageName);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     /** ROM có quyền riêng của Xiaomi mà GMS Fix chưa được cho phép. */
     static boolean needsMiuiPerm(android.content.Context ctx) {
         try {
@@ -64,7 +73,22 @@ final class AppPicker {
         } catch (Throwable t) {
             return false; // ROM không có quyền này (không phải Xiaomi)
         }
-        return ctx.checkSelfPermission(MIUI_PERM) != PackageManager.PERMISSION_GRANTED;
+        if (ctx.checkSelfPermission(MIUI_PERM) == PackageManager.PERMISSION_GRANTED) return false;
+        // HyperOS điều khiển quyền này bằng appop MIUIOP(10022): trạng thái runtime có thể "chưa cấp" mà vẫn
+        // được phép → kiểm tra thực tế: thấy được app do người dùng cài nào không.
+        return !userAppsVisible(ctx);
+    }
+
+    static boolean userAppsVisible(android.content.Context ctx) {
+        try {
+            for (ApplicationInfo ai : ctx.getPackageManager().getInstalledApplications(0)) {
+                if ((ai.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) == 0
+                        && !ai.packageName.equals(ctx.getPackageName())
+                        && !ai.packageName.equals(Readiness.SHIZUKU_PKG)) return true;
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
     }
 
     /** Gọi từ onRequestPermissionsResult của Activity: mở lại danh sách sau khi người dùng trả lời. */
@@ -168,10 +192,10 @@ final class AppPicker {
         showSystem.setOnCheckedChangeListener((b, c) -> filter.run());
 
         new MaterialAlertDialogBuilder(activity)
-                .setTitle("Chọn ứng dụng")
+                .setTitle(I18n.t("Chọn ứng dụng"))
                 .setView(view)
                 .setPositiveButton("Xong", (d, w) -> onDone.accept(selected))
-                .setNegativeButton("Hủy", null)
+                .setNegativeButton(I18n.t("Hủy"), null)
                 .show();
 
         Handler main = new Handler(Looper.getMainLooper());
@@ -207,15 +231,15 @@ final class AppPicker {
                     return s != 0 ? s : a.label.compareToIgnoreCase(b.label);
                 });
             } catch (Throwable t) {
-                err = "Không đọc được danh sách ứng dụng: " + t.getClass().getSimpleName() + ": " + t.getMessage();
+                err = I18n.t("Không đọc được danh sách ứng dụng: ") + t.getClass().getSimpleName() + ": " + t.getMessage();
             }
             String msg = err;
             if (msg == null && needsMiuiPerm(activity)) {
-                msg = "GMS Fix chưa được phép đọc danh sách ứng dụng nên chỉ thấy app hệ thống. Vào Cài đặt → Ứng dụng → "
-                        + "GMS Fix → Quyền ứng dụng (Quyền khác) → bật \"Đọc danh sách ứng dụng đã cài\", rồi mở lại.";
+                msg = I18n.t("GMS Fix chưa được phép đọc danh sách ứng dụng nên chỉ thấy app hệ thống. Vào Cài đặt → Ứng dụng → ")
+                        + I18n.t("GMS Fix → Quyền ứng dụng (Quyền khác) → bật \"Đọc danh sách ứng dụng đã cài\", rồi mở lại.");
             } else if (msg == null && user == 0) {
-                msg = "Không thấy app nào do bạn cài — ROM đang ẩn danh sách ứng dụng với GMS Fix. Kiểm tra quyền "
-                        + "\"Đọc danh sách ứng dụng đã cài\" trong Cài đặt → Ứng dụng → GMS Fix.";
+                msg = I18n.t("Không thấy app nào do bạn cài — ROM đang ẩn danh sách ứng dụng với GMS Fix. Kiểm tra quyền ")
+                        + I18n.t("\"Đọc danh sách ứng dụng đã cài\" trong Cài đặt → Ứng dụng → GMS Fix.");
             }
             String fmsg = msg;
             main.post(() -> {

@@ -78,7 +78,7 @@ public class BootReceiver extends BroadcastReceiver {
 
         NotificationManager nm = ctx.getSystemService(NotificationManager.class);
         if (Build.VERSION.SDK_INT >= 26) {
-            nm.createNotificationChannel(new NotificationChannel(CHANNEL, "Nhắc fix lại",
+            nm.createNotificationChannel(new NotificationChannel(CHANNEL, I18n.t("Nhắc fix lại"),
                     NotificationManager.IMPORTANCE_DEFAULT));
         }
         PendingIntent pi = PendingIntent.getActivity(ctx, 0,
@@ -88,8 +88,8 @@ public class BootReceiver extends BroadcastReceiver {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         NotificationManagerCompat.from(ctx).notify(NOTIF_ID, new NotificationCompat.Builder(ctx, CHANNEL)
                 .setSmallIcon(R.drawable.ic_bolt)
-                .setContentTitle("Máy vừa khởi động lại — chưa tự fix được")
-                .setContentText("Bấm để fix lại GMS / FCM (Greezer đã bị reset)")
+                .setContentTitle(I18n.t("Máy vừa khởi động lại — chưa tự fix được"))
+                .setContentText(I18n.t("Bấm để fix lại GMS / FCM (Greezer đã bị reset)"))
                 .setContentIntent(pi)
                 .setAutoCancel(true)
                 .build());

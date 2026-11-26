@@ -120,8 +120,8 @@ final class ThemeFix {
                 + "    <author>GMS Fix</author>\n"
                 + "    <designer>GMS Fix</designer>\n"
                 + "    <title>GMS Fix – FCM</title>\n"
-                + "    <description>Không đổi giao diện. Chỉ sửa danh sách đóng băng của Greezer để "
-                + "Google Play services (FCM) và các app đã chọn không bị đóng băng.</description>\n"
+                + I18n.t("    <description>Không đổi giao diện. Chỉ sửa danh sách đóng băng của Greezer để ")
+                + I18n.t("Google Play services (FCM) và các app đã chọn không bị đóng băng.</description>\n")
                 + "</theme>\n";
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -180,7 +180,7 @@ final class ThemeFix {
             v.put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream");
             v.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
             Uri uri = cr.insert(col, v);
-            if (uri == null) throw new IllegalStateException("Không tạo được file trong Download");
+            if (uri == null) throw new IllegalStateException(I18n.t("Không tạo được file trong Download"));
             try (OutputStream os = cr.openOutputStream(uri)) {
                 os.write(data);
             }

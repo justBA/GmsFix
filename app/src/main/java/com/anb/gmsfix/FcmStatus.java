@@ -49,8 +49,8 @@ final class FcmStatus {
     String stats24() {
         if (conns24 < 0) return null;
         // GMS đếm cả lần đổi Wi-Fi↔4G (rớt 0 giây) và tin ưu tiên cao trễ chỉ 1–2 giây → ghi rõ phần đáng chú ý
-        if (longDrops < 0) return "Rớt " + drops24 + " • trễ " + delayed24;
-        return "Rớt " + drops24 + " (" + longDrops + " lâu) • trễ " + delayed24 + " (" + seriousDelays + " đáng lo)";
+        if (longDrops < 0) return I18n.t("Rớt ") + drops24 + I18n.t(" • trễ ") + delayed24;
+        return I18n.t("Rớt ") + drops24 + " (" + longDrops + I18n.t(" lâu) • trễ ") + delayed24 + " (" + seriousDelays + I18n.t(" đáng lo)");
     }
 
     /** "11-24 02:59" (UTC) → epoch ms; 0 nếu lỗi. */
@@ -67,11 +67,11 @@ final class FcmStatus {
 
     String label() {
         switch (state) {
-            case CONNECTED: return "Đã kết nối";
-            case DISCONNECTED: return "Mất kết nối";
-            case NO_SERVICE: return "Không chạy";
-            case NO_ACCESS: return "Không đọc được";
-            default: return "Không rõ";
+            case CONNECTED: return I18n.t("Đã kết nối");
+            case DISCONNECTED: return I18n.t("Mất kết nối");
+            case NO_SERVICE: return I18n.t("Không chạy");
+            case NO_ACCESS: return I18n.t("Không đọc được");
+            default: return I18n.t("Không rõ");
         }
     }
 
@@ -99,7 +99,7 @@ final class FcmStatus {
     /** Đọc qua root/Shizuku nếu có; không thì tự chạy dumpsys bằng quyền DUMP đã được cấp. */
     static FcmStatus query(Shell.Mode mode, boolean hasDump) {
         if (mode == null) {
-            if (!hasDump) return new FcmStatus(State.NO_ACCESS, "Chạy \"Fix ngay\" 1 lần để đọc được mà không cần Shizuku", "");
+            if (!hasDump) return new FcmStatus(State.NO_ACCESS, I18n.t("Chạy \"Fix ngay\" 1 lần để đọc được mà không cần Shizuku"), "");
             mode = Shell.Mode.DIRECT;
         }
         String out;
@@ -109,16 +109,16 @@ final class FcmStatus {
             return new FcmStatus(State.NO_ACCESS, e.getMessage(), "");
         }
         if (out.contains("missing android.permission.PACKAGE_USAGE_STATS")) {
-            return new FcmStatus(State.NO_ACCESS, "Cần bấm \"Fix ngay\" 1 lần khi có Shizuku để cấp quyền", out.trim());
+            return new FcmStatus(State.NO_ACCESS, I18n.t("Cần bấm \"Fix ngay\" 1 lần khi có Shizuku để cấp quyền"), out.trim());
         }
         if (out.contains("app ops") || out.contains("PACKAGE_USAGE_STATS")) {
-            return new FcmStatus(State.NO_ACCESS, "Cần bật Usage access — bấm để mở", out.trim());
+            return new FcmStatus(State.NO_ACCESS, I18n.t("Cần bật Usage access — bấm để mở"), out.trim());
         }
         if (out.contains("Permission Denial") || out.contains("not allowed")) {
-            return new FcmStatus(State.NO_ACCESS, "Không có quyền đọc (DUMP)", out.trim());
+            return new FcmStatus(State.NO_ACCESS, I18n.t("Không có quyền đọc (DUMP)"), out.trim());
         }
         if (out.trim().isEmpty() || out.contains("No services match")) {
-            return new FcmStatus(State.NO_SERVICE, "GcmService không chạy", out.trim());
+            return new FcmStatus(State.NO_SERVICE, I18n.t("GcmService không chạy"), out.trim());
         }
 
         List<String> keep = new ArrayList<>();
@@ -140,10 +140,10 @@ final class FcmStatus {
         String summary;
         Matcher h = HOST.matcher(out);
         if (h.find()) summary = h.group(1);
-        else if (state == State.UNKNOWN) summary = "Không đọc được trạng thái — bấm để xem chi tiết";
+        else if (state == State.UNKNOWN) summary = I18n.t("Không đọc được trạng thái — bấm để xem chi tiết");
         else summary = "";
         if (!stopped.isEmpty()) {
-            summary = (summary.isEmpty() ? "" : summary + " • ") + stopped.size() + " app bị mất tin (stopped)";
+            summary = (summary.isEmpty() ? "" : summary + " • ") + stopped.size() + I18n.t(" app bị mất tin (stopped)");
         }
         FcmStatus st = new FcmStatus(state, summary, detail, stopped);
         st.raw = out;

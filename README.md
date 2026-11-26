@@ -1,3 +1,5 @@
+🇻🇳 Tiếng Việt | [🇬🇧 English](README.en.md)
+
 # GMS Fix
 
 App Android giúp **thông báo (FCM) không bị HyperOS chặn**: không bị mất tin, không bị trễ, không bị ngắt kết nối. Viết cho Xiaomi chạy **HyperOS ROM CN** và **không root**.
@@ -6,7 +8,76 @@ App Android giúp **thông báo (FCM) không bị HyperOS chặn**: không bị 
 - Máy thử nghiệm: Xiaomi `popsicle` (2509FPN0BC), HyperOS OS4.0 CN, Android 17, không root
 - Ràng buộc: bình thường **Developer options phải tắt** (để app ngân hàng và VNeID chạy được). Shizuku chỉ bật khi cần bấm **Fix ngay**.
 
+- Ngôn ngữ: app có **Tiếng Việt / English / theo hệ thống**, chọn ngôn ngữ trong app.
+
 > ☕ App giúp được bạn? [Mời mình ly cà phê](#-mời-mình-ly-cà-phê) nha!
+
+---
+
+## Chuẩn bị (lần đầu trên máy mới)
+
+Làm 1 lần. Sau đó Developer options tắt lại được, app vẫn chạy.
+
+**1. Cài app**
+Tải `GmsFix-3.0.3.apk` ở [Releases](https://github.com/justBA/GmsFix/releases/latest) rồi cài. Lần mở đầu tiên, cho phép **Thông báo** (cảnh báo mất/trễ tin cần quyền này).
+
+**2. Bật Developer options**
+*Cài đặt → Giới thiệu điện thoại* → chạm **Phiên bản OS** 7 lần. Sau đó vào *Cài đặt → Cài đặt bổ sung → Tùy chọn nhà phát triển*, bật:
+- **USB debugging** (Gỡ lỗi USB)
+- **Install via USB** (Cài đặt qua USB)
+- **USB debugging (Security settings)**: Xiaomi bắt buộc mục này thì mới cấp được `WRITE_SECURE_SETTINGS`. Mục này thường đòi đăng nhập Mi account và có SIM.
+- **Wireless debugging** (Gỡ lỗi không dây), nếu dùng Shizuku không cần máy tính.
+
+**3. Cài và khởi động Shizuku**
+- Tải Shizuku ở [GitHub](https://github.com/RikkaApps/Shizuku/releases) (máy thử dùng 13.6.0).
+- **Ghép nối Shizuku qua Wireless debugging (làm 1 lần, không cần máy tính):**
+  1. Kết nối **Wi-Fi** (mạng nào cũng được, không cần internet).
+  2. Cho phép **thông báo** của Shizuku: mã ghép nối được nhập ngay trong thông báo của nó.
+  3. *Cài đặt → Cài đặt bổ sung → Tùy chọn nhà phát triển* → bật **Wireless debugging (Gỡ lỗi không dây)**. Hỏi "Cho phép gỡ lỗi không dây trên mạng này?" thì chọn **Cho phép** (tick "Luôn cho phép trên mạng này" để lần sau khỏi hỏi).
+  4. Mở Shizuku → mục *Start via Wireless debugging* → bấm **Pairing**. Shizuku hiện một thông báo "Đang tìm dịch vụ ghép nối…".
+  5. Quay lại *Wireless debugging* → bấm **Pair device with pairing code (Ghép nối thiết bị bằng mã)**. Màn hình hiện **mã 6 số**. Đừng tắt hộp thoại này.
+  6. Kéo thanh thông báo xuống → thông báo của Shizuku → **Enter pairing code** → nhập 6 số → gửi. Thấy "Ghép nối thành công" là xong. Trong *Wireless debugging* sẽ có thiết bị "Shizuku" ở mục *Paired devices*.
+  7. Quay lại Shizuku → bấm **Start**. Dòng trạng thái đổi thành *Shizuku is running*.
+  - Không thấy thông báo để nhập mã: kiểm tra lại quyền thông báo của Shizuku, hoặc chia đôi màn hình (Shizuku + Cài đặt) rồi làm lại bước 4–6.
+  - Từ lần sau **không cần ghép nối lại**: chỉ cần Wi-Fi + Wireless debugging bật rồi bấm Start. GMS Fix tự bật Wireless debugging và mở Shizuku khi bạn bấm Fix ngay.
+- Nếu có máy tính, có thể khởi động Shizuku bằng cáp, chạy lệnh mà Shizuku hiện ở mục *Start via adb*, ví dụ:
+  ```bash
+  adb shell 'sh -c "$(pm path moe.shizuku.privileged.api | cut -d: -f2 | sed s/base.apk//)lib/arm64/libshizuku.so"'
+  ```
+- **Wireless debugging chỉ bật được khi máy đang kết nối Wi-Fi** (không cần internet). Không có Wi-Fi thì phát hotspot từ máy khác rồi kết nối vào, hoặc dùng cáp + lệnh adb ở trên. Shizuku chạy rồi thì ngắt Wi-Fi không sao. Fix ngay sẽ báo nếu thiếu Wi-Fi thay vì kẹt ở bước mở Shizuku.
+- Shizuku **dừng** khi khởi động lại máy hoặc khi tắt Wireless debugging / Developer options. Lần sau bấm Fix, app tự bật Developer, mở Shizuku để bạn bấm Start rồi chạy tiếp.
+
+**4. Bấm *Fix ngay* trong GMS Fix**
+- Bấm dấu **ⓘ cạnh chữ Trạng thái** để xem checklist điều kiện (app cần có, Shizuku, từng quyền của GMS Fix). Mục chưa đạt có dấu ! — bấm vào để xem hướng dẫn và mở thẳng trang cài đặt / xin quyền / trang tải. *Fix ngay* chỉ chạy khi đủ điều kiện bắt buộc, thiếu gì sẽ hướng dẫn mục đó thay vì chạy dở.
+- Shizuku hỏi quyền cho GMS Fix → **Allow**. Trên HyperOS 4 CN, Shizuku không lưu "Allow all the time", nên mỗi lần Fix có thể phải bấm Allow lại.
+- Bước *Cấp quyền cho GMS Fix* của Fix tự cấp các quyền sau. Nếu không dùng Shizuku, chạy bằng adb từ máy tính cũng được:
+  ```bash
+  adb shell pm grant com.anb.gmsfix android.permission.WRITE_SECURE_SETTINGS
+  adb shell pm grant com.anb.gmsfix android.permission.DUMP
+  adb shell pm grant com.anb.gmsfix android.permission.PACKAGE_USAGE_STATS
+  adb shell cmd appops set com.anb.gmsfix GET_USAGE_STATS allow
+  adb shell cmd appops set com.anb.gmsfix SCHEDULE_EXACT_ALARM allow
+  ```
+  | Quyền | Để làm gì |
+  |---|---|
+  | `WRITE_SECURE_SETTINGS` | Ghi `aurogon_enable`, `device_idle_constants`, Nighttime mode; tự bật/tắt Developer options |
+  | `DUMP` | Đọc trạng thái FCM, Greezer, doze; áp dụng lại phần Greezer sau khi khởi động máy |
+  | `PACKAGE_USAGE_STATS` + `GET_USAGE_STATS` | Đọc `dumpsys GcmService` không cần Shizuku |
+  | `SCHEDULE_EXACT_ALARM` | Báo thức "Đánh thức GMS" đúng giờ |
+
+**5. Quyền trong HyperOS cho chính GMS Fix**
+- *Cài đặt → Ứng dụng → GMS Fix → Quyền khác* → bật **Đọc danh sách ứng dụng đã cài**. App cũng tự hỏi khi bấm chọn ứng dụng. Thiếu quyền này thì danh sách chỉ thấy app hệ thống.
+- Bật **Tự khởi chạy** (Autostart) và để cài đặt pin là **No restrictions** cho GMS Fix.
+
+**6. Chọn app và thói quen nên có**
+- Thêm app chat, ngân hàng… vào danh sách, rồi bấm **Fix ngay** lại.
+- **Khoá** app quan trọng trong đa nhiệm (nhấn giữ thẻ → ổ khoá). Đừng vuốt bỏ hay "dọn tất cả": trên ROM này đó là force-stop.
+- Nighttime mode: app tự tắt (tuỳ chọn *Ban đêm*, mặc định bật).
+
+**7. Tắt Developer options lại**
+Xong thì tắt bằng nút trong app (mặc định Fix xong app tự tắt), để app ngân hàng và VNeID chạy được.
+
+Khi Developer options tắt và Shizuku không chạy, **vẫn hoạt động**: đánh thức GMS định kỳ, `aurogon_enable` (FCM mở băng app), nới deep doze, giữ Nighttime mode tắt, cảnh báo, áp dụng lại sau khi khởi động máy. **Cần Shizuku (bấm Fix):** No Restrictions cho Google Play services sau khi khởi động lại, danh sách alarm ban đêm, bỏ trạng thái dừng, tự khởi chạy, Doze whitelist.
 
 ---
 
@@ -25,7 +96,7 @@ App Android giúp **thông báo (FCM) không bị HyperOS chặn**: không bị 
 
 ## Tính năng
 
-Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riêng.
+Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riêng. **Hiện chỉ hướng 1 hoạt động**; hướng 2 (theme) chưa hoạt động.
 
 ### 1. Giữ FCM sống (dùng hằng ngày)
 
@@ -42,10 +113,10 @@ Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riên
 
 **Tuỳ chọn:**
 - **Đánh thức GMS định kỳ** (5/10/15/20 phút): chỉ chạy khi dùng pin và tắt màn hình. App truy vấn provider của GMS để Greezer mở băng GMS, kiểm tra lại kết nối FCM, nếu hỏng thì thử lại sau 3 phút.
-- **Cho FCM đánh thức app bị đóng băng**: ghi mục `broadcastctrl:true#pkg/com.google.android.c2dm.intent.RECEIVE#…` vào Settings.Global `aurogon_enable`. Greezer chỉ mở băng app khi có tin FCM. Chế độ "mọi broadcast" (`broadcastctrl:false`) cũng có, nhưng tốn pin hơn.
+- **Cho FCM đánh thức app bị đóng băng** (mặc định bật): ghi mục `broadcastctrl:true#pkg/com.google.android.c2dm.intent.RECEIVE#…` vào Settings.Global `aurogon_enable`. Greezer chỉ mở băng app khi có tin FCM. Chế độ "mọi broadcast" (`broadcastctrl:false`) cũng có, nhưng tốn pin hơn.
   - **Tự ghi lại nếu bị đổi**: cloud hoặc HyperOS đổi lại thì app tự ghi lại.
   - **Mọi app có FCM** (mặc định bật): ngoài danh sách đã chọn, thêm mọi app có receiver c2dm. App mới cài tự được thêm. Bấm "xem ›" để xem danh sách.
-- **Nới deep doze**: Settings.Global `device_idle_constants`. Ngủ sâu sau 2 phút, thức gom tin mỗi 15 → 30 phút. Tin ưu tiên thường trễ tối đa ~30 phút, thay vì 1–6 giờ. Nút ⓘ cho xem giá trị đang dùng và giá trị mặc định của HyperOS.
+- **Nới deep doze** (mặc định bật): Settings.Global `device_idle_constants`. Ngủ sâu sau 2 phút, thức gom tin mỗi 15 → 30 phút. Tin ưu tiên thường trễ tối đa ~30 phút, thay vì 1–6 giờ. Nút ⓘ cho xem giá trị đang dùng và giá trị mặc định của HyperOS.
 - **Ban đêm (sleep mode)** (mặc định bật, đã kiểm chứng đêm 24→25/11):
   - Tắt **Nighttime mode**: Settings.Secure `sec_pc_config_scenario_policies_open = 0`. App ghi bằng quyền của nó (**không cần Shizuku**) và tự tắt lại mỗi lần đánh thức GMS hoặc khởi động máy nếu bị bật lại.
   - Thêm Google Play services + GMS Fix vào `cloud_aurogon_alarm_allow_list`, để alarm heartbeat/đánh thức được đi qua khi đang bị đóng băng. Phần này cần Shizuku. Kiểm tra cài đặt sẽ báo nếu bị đặt lại.
@@ -54,7 +125,7 @@ Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riên
 - **Mất thông báo**: GMS bỏ tin vì app đang bị dừng.
 - **Thông báo bị trễ**: tin ưu tiên cao trễ hơn 2 phút. Tin ưu tiên thường chỉ ghi vào log khi trễ hơn 35 phút.
 - **Cài đặt bị đổi**: HyperOS đổi lại các quyền chạy nền.
-- **App tắt thông báo**.
+- **App tắt thông báo** (mặc định tắt).
 - Trang **Log** riêng, có lọc theo loại và ghi rõ tên app.
 
 **Trạng thái:** kết nối FCM, thống kê 24 giờ, kiểm tra cài đặt, Shizuku, root, Developer options. Có widget hiển thị trạng thái FCM.
@@ -79,11 +150,11 @@ Xong thì app tự tắt Developer options, nếu tuỳ chọn đó đang bật.
 
 **Sau khi khởi động lại máy:** app tự áp dụng lại phần Greezer (bằng quyền `DUMP`), `aurogon_enable`, doze và tắt Nighttime mode, **không cần Shizuku**. Riêng Google Play services bị PowerKeeper xoá khỏi No Restrictions, nên app sẽ nhắc bấm Fix.
 
-### 2. Chỉnh bằng theme (thử nghiệm)
+### 2. Chỉnh bằng theme — ⚠️ CHƯA HOẠT ĐỘNG
 
 Tạo file `.mtz` ẩn (`Download/GmsFix-FCM.mtz`) để ghi đè `theme_values.xml` của `android.miui`: bỏ GMS khỏi danh sách đen của Greezer, thêm app vào các whitelist. Có nút gỡ hoặc khôi phục app Themes (tuỳ chọn, có rollback).
 
-**Hiện bị chặn:** app Themes (cả bản CN 11.5.6 lẫn bản Global) kiểm tra DRM khi áp dụng theme (`DRM_ERROR_RIGHT_FILE_NOT_EXISTS`). Dự án này **không** vượt DRM.
+**Chưa hoạt động, đừng dùng để thay cho mục 1.** Lý do: app Themes (cả bản CN 11.5.6 lẫn bản Global) kiểm tra DRM khi áp dụng theme (`DRM_ERROR_RIGHT_FILE_NOT_EXISTS`). Dự án này **không** vượt DRM.
 
 ---
 
@@ -155,7 +226,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 - APK được ký bằng debug key của máy build. Cài đè từ máy khác sẽ lỗi chữ ký, phải gỡ app trước.
-- Lần đầu cần chạy **Fix ngay** với Shizuku (hoặc root) để app được cấp `WRITE_SECURE_SETTINGS` và `DUMP`.
+- Lần đầu cần chạy **Fix ngay** với Shizuku (hoặc root) để app được cấp quyền, xem [Chuẩn bị](#chuẩn-bị-lần-đầu-trên-máy-mới).
 
 ## Cấu trúc mã nguồn
 

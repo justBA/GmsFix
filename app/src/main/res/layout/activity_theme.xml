@@ -24,7 +24,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="-12dp"
-                android:contentDescription="Quay lại"
+                android:contentDescription="@string/back"
                 app:icon="@drawable/ic_back" />
 
             <LinearLayout
@@ -36,14 +36,14 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chỉnh bằng theme"
+                    android:text="@string/theme_title"
                     android:textAppearance="?attr/textAppearanceHeadlineSmall"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sửa danh sách đóng băng cứng trong ROM"
+                    android:text="@string/theme_sub"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
@@ -72,7 +72,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Trạng thái theme"
+                        android:text="@string/theme_status"
                         android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                     <com.google.android.material.button.MaterialButton
@@ -80,7 +80,7 @@
                         style="?attr/materialIconButtonStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="Làm mới"
+                        android:contentDescription="@string/refresh"
                         app:icon="@drawable/ic_refresh" />
                 </LinearLayout>
 
@@ -109,7 +109,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Cài theme"
+                    android:text="@string/theme_install"
                     android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                 <LinearLayout
@@ -153,7 +153,7 @@
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Chọn app" />
+                        android:text="@string/pick_apps" />
                 </LinearLayout>
 
                 <TextView
@@ -167,7 +167,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Dùng chung danh sách với “Giữ FCM sống”. Đổi danh sách thì tạo lại file theme và nhập lại."
+                    android:text="@string/theme_shared_list"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
@@ -190,14 +190,14 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Gỡ theme"
+                    android:text="@string/theme_remove"
                     android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Vào app Theme áp dụng lại theme mặc định rồi khởi động lại máy — mọi thứ về như cũ."
+                    android:text="@string/theme_remove_desc"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -209,7 +209,7 @@
                     android:background="?attr/selectableItemBackground"
                     android:paddingTop="8dp"
                     android:paddingBottom="8dp"
-                    android:text="▸ Nâng cao: theme bị tự trả về mặc định?"
+                    android:text="@string/theme_advanced"
                     android:textAppearance="?attr/textAppearanceLabelLarge"
                     android:textColor="?attr/colorPrimary" />
 
@@ -223,7 +223,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="App Theme có thể tự khôi phục theme mặc định với theme không chính chủ. Gỡ app Theme (chỉ cho người dùng hiện tại) giữ theme lại. Cài lại bất cứ lúc nào bằng Rollback. Cần Shizuku hoặc root."
+                        android:text="@string/theme_advanced_desc"
                         android:textAppearance="?attr/textAppearanceBodySmall"
                         android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -240,7 +240,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="6dp"
                             android:layout_weight="1"
-                            android:text="Gỡ app Theme" />
+                            android:text="@string/theme_uninstall_app" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnRestore"
@@ -249,7 +249,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
                             android:layout_weight="1"
-                            android:text="Rollback: cài lại" />
+                            android:text="@string/theme_rollback" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -260,7 +260,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
-            android:text="Cách hoạt động: Greezer của HyperOS (ROM CN) đọc danh sách đóng băng từ resource của ROM, và GMS bị ghi cứng trong danh sách đen. Theme MIUI được phép ghi đè resource này. File theme chỉ chứa theme_values.xml — không đổi giao diện."
+            android:text="@string/theme_how"
             android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>

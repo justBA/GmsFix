@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int SHIZUKU_REQ = 1001;
     private static final int NOTIF_REQ = 1002;
+    private static final int CHECK_REQ = 1004;          // xin quyền từ checklist
+    private static final int SHIZUKU_REQ_CHECK = 1005;  // quyền Shizuku từ checklist (không tự chạy Fix)
     private static final String SHIZUKU_PKG = "moe.shizuku.privileged.api";
     private static final String SHIZUKU_URL = "https://github.com/RikkaApps/Shizuku/releases";
     private static final Pattern PKG_NAME = Pattern.compile("[A-Za-z0-9_.]+");
@@ -96,13 +98,20 @@ public class MainActivity extends AppCompatActivity {
     private boolean pendingRun;
 
     private final Shizuku.OnRequestPermissionResultListener permListener = (code, result) -> {
+        if (code == SHIZUKU_REQ_CHECK) {
+            main.post(() -> {
+                refreshStatus();
+                refreshReadinessIfShown();
+            });
+            return;
+        }
         if (code != SHIZUKU_REQ) return;
         boolean run = pendingRun;
         pendingRun = false;
         if (result == PackageManager.PERMISSION_GRANTED && run) {
             startRun(Shell.Mode.SHIZUKU);
         } else {
-            toast("Shizuku: quyền bị từ chối");
+            toast(I18n.t("Shizuku: quyền bị từ chối"));
             setBusy(false);
         }
         refreshStatus();
@@ -117,18 +126,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         DynamicColors.applyToActivityIfAvailable(this);
         super.onCreate(savedInstanceState);
+        I18n.sync(this);
         setContentView(R.layout.activity_main);
         prefs = getSharedPreferences("gmsfix", MODE_PRIVATE);
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         LinearLayout statusRows = findViewById(R.id.statusRows);
-        View fcmRow = addStatusRow(statusRows, "Kết nối FCM", v -> showFcmDetail());
+        View fcmRow = addStatusRow(statusRows, I18n.t("Kết nối FCM"), v -> showFcmDetail());
         pillFcm = fcmRow.findViewById(R.id.pill);
         subFcm = fcmRow.findViewById(R.id.sub);
-        View fcm24Row = addStatusRow(statusRows, "FCM 24 giờ qua", null);
+        View fcm24Row = addStatusRow(statusRows, I18n.t("FCM 24 giờ qua"), null);
         pillFcm24 = fcm24Row.findViewById(R.id.pill);
         subFcm24 = fcm24Row.findViewById(R.id.sub);
-        View healthRow = addStatusRow(statusRows, "Kiểm tra cài đặt", v -> showHealth());
+        View healthRow = addStatusRow(statusRows, I18n.t("Kiểm tra cài đặt"), v -> showHealth());
         com.google.android.material.divider.MaterialDivider div = new com.google.android.material.divider.MaterialDivider(this);
         LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -153,11 +163,12 @@ public class MainActivity extends AppCompatActivity {
         resultSummary = findViewById(R.id.resultSummary);
         resultMode = findViewById(R.id.resultMode);
 
+        findViewById(R.id.btnReady).setOnClickListener(v -> showReadiness());
         findViewById(R.id.btnRefresh).setOnClickListener(v -> {
             refreshStatus();
             refreshFcm();
         });
-        findViewById(R.id.btnFullLog).setOnClickListener(v -> showText("Log đầy đủ", fullLog.toString()));
+        findViewById(R.id.btnFullLog).setOnClickListener(v -> showText(I18n.t("Log đầy đủ"), fullLog.toString()));
         btnPickApps.setOnClickListener(v ->
                 AppPicker.show(this, getPkgs(), sel -> {
                     setPkgs(sel);
@@ -199,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
         swBcCtrl.setOnCheckedChangeListener((b, on) -> {
             prefs.edit().putBoolean(BroadcastCtrl.PREF_ON, on).apply();
             String err = on ? BroadcastCtrl.apply(this) : BroadcastCtrl.restore(this);
-            if (err != null) toast("Không ghi được: " + err);
+            if (err != null) toast(I18n.t("Không ghi được: ") + err);
             refreshBroadcastCtrl();
         refreshAlerts();
         });
@@ -210,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
             prefs.edit().putBoolean(BroadcastCtrl.PREF_ALL_FCM, on).apply();
             if (BroadcastCtrl.wanted(this)) {
                 String err = BroadcastCtrl.apply(this);
-                if (err != null) toast("Không ghi được: " + err);
+                if (err != null) toast(I18n.t("Không ghi được: ") + err);
             }
             refreshBroadcastCtrl();
         });
@@ -222,31 +233,31 @@ public class MainActivity extends AppCompatActivity {
         swNight.setChecked(SleepGuard.wanted(this));
         swNight.setOnCheckedChangeListener((b, on) -> {
             prefs.edit().putBoolean(SleepGuard.PREF_ON, on).apply();
-            ((TextView) findViewById(R.id.nightStatus)).setText("Đang áp dụng…");
+            ((TextView) findViewById(R.id.nightStatus)).setText(I18n.t("Đang áp dụng…"));
             new Thread(() -> {
                 String err = SleepGuard.applyNow(this, on);
                 main.post(() -> {
-                    if (err != null) toast("Ban đêm: " + err);
+                    if (err != null) toast(I18n.t("Ban đêm: ") + err);
                     refreshNight();
                 });
             }).start();
         });
         findViewById(R.id.btnNightInfo).setOnClickListener(v -> new MaterialAlertDialogBuilder(this)
-                .setTitle("Ban đêm (sleep mode)")
-                .setMessage("Khi phát hiện bạn ngủ (máy để yên ban đêm), PowerKeeper bật sleep mode: TẮT 4G + Wi-Fi "
-                        + "(tuỳ chọn Pin → Additional features → Nighttime mode) và đóng băng cả app No Restrictions "
-                        + "→ FCM mất kết nối, tin tới dồn lúc sáng.\n\n"
-                        + "Bật:\n• tắt Nighttime mode (" + SleepGuard.NIGHT_KEY + " = 0) — app tự giữ, không cần Shizuku\n"
-                        + "• thêm Google Play services + GMS Fix vào " + SleepGuard.ALARM_KEY + " (alarm heartbeat/"
-                        + "đánh thức được đi qua khi đang bị đóng băng) — cần Shizuku (Fix ngay)\n\n"
-                        + "Tốn pin ban đêm hơn vì máy giữ mạng để nhận tin.\n\nHiện tại: " + SleepGuard.status(this))
+                .setTitle(I18n.t("Ban đêm (sleep mode)"))
+                .setMessage(I18n.t("Khi phát hiện bạn ngủ (máy để yên ban đêm), PowerKeeper bật sleep mode: TẮT 4G + Wi-Fi ")
+                        + I18n.t("(tuỳ chọn Pin → Additional features → Nighttime mode) và đóng băng cả app No Restrictions ")
+                        + I18n.t("→ FCM mất kết nối, tin tới dồn lúc sáng.\n\n")
+                        + I18n.t("Bật:\n• tắt Nighttime mode (") + SleepGuard.NIGHT_KEY + I18n.t(" = 0) — app tự giữ, không cần Shizuku\n")
+                        + I18n.t("• thêm Google Play services + GMS Fix vào ") + SleepGuard.ALARM_KEY + " (alarm heartbeat/"
+                        + I18n.t("đánh thức được đi qua khi đang bị đóng băng) — cần Shizuku (Fix ngay)\n\n")
+                        + I18n.t("Tốn pin ban đêm hơn vì máy giữ mạng để nhận tin.\n\nHiện tại: ") + SleepGuard.status(this))
                 .setPositiveButton("OK", null)
                 .show());
         swDoze.setChecked(DozeTune.wanted(this));
         swDoze.setOnCheckedChangeListener((b, on) -> {
             prefs.edit().putBoolean(DozeTune.PREF_ON, on).remove("dozeReapplyCount").apply();
             String err = on ? DozeTune.apply(this) : DozeTune.restore(this);
-            if (err != null) toast("Không ghi được: " + err);
+            if (err != null) toast(I18n.t("Không ghi được: ") + err);
             refreshDoze();
         });
         swBcAuto.setOnCheckedChangeListener((b, on) -> {
@@ -262,8 +273,8 @@ public class MainActivity extends AppCompatActivity {
         });
         KeepAlive.apply(this);
 
-        ((TextView) findViewById(R.id.topTitle)).setText("Giữ FCM sống");
-        ((TextView) findViewById(R.id.topSub)).setText("Miễn hạn chế + đánh thức GMS định kỳ");
+        ((TextView) findViewById(R.id.topTitle)).setText(I18n.t("Giữ FCM sống"));
+        ((TextView) findViewById(R.id.topSub)).setText(I18n.t("Miễn hạn chế + đánh thức GMS định kỳ"));
 
         Shizuku.addRequestPermissionResultListener(permListener);
         Shizuku.addBinderReceivedListenerSticky(binderReceived);
@@ -297,6 +308,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         resumed = true;
+        refreshReadinessIfShown();
         refreshStatus();
         refreshFcm();
         refreshKeepAlive();
@@ -312,25 +324,25 @@ public class MainActivity extends AppCompatActivity {
         String[] labels = new String[c.length];
         int cur = KeepAlive.intervalMin(this), sel = 1;
         for (int i = 0; i < c.length; i++) {
-            labels[i] = c[i] + " phút" + (c[i] == 5 ? " (nhanh nhất, tốn pin hơn)" : c[i] == 10 ? " (khuyên dùng)" : "");
+            labels[i] = c[i] + I18n.t(" phút") + (c[i] == 5 ? I18n.t(" (nhanh nhất, tốn pin hơn)") : c[i] == 10 ? I18n.t(" (khuyên dùng)") : "");
             if (c[i] == cur) sel = i;
         }
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Chu kỳ đánh thức GMS")
+                .setTitle(I18n.t("Chu kỳ đánh thức GMS"))
                 .setSingleChoiceItems(labels, sel, (d, w) -> {
                     prefs.edit().putInt(KeepAlive.PREF_INTERVAL, c[w]).apply();
                     KeepAlive.apply(this);
                     refreshKeepAlive();
                     d.dismiss();
                 })
-                .setNegativeButton("Hủy", null)
+                .setNegativeButton(I18n.t("Hủy"), null)
                 .show();
     }
 
     private void refreshKeepAlive() {
-        btnKaInterval.setText("Mỗi " + KeepAlive.intervalMin(this) + " phút ▾");
+        btnKaInterval.setText(I18n.t("Mỗi ") + KeepAlive.intervalMin(this) + I18n.t(" phút ▾"));
         btnKaInterval.setEnabled(KeepAlive.enabled(this));
-        kaStatus.setText(KeepAlive.enabled(this) ? KeepAlive.lastRun(this) : "Đang tắt");
+        kaStatus.setText(KeepAlive.enabled(this) ? KeepAlive.lastRun(this) : I18n.t("Đang tắt"));
     }
 
     private String appLabel(String pkg) {
@@ -381,31 +393,31 @@ public class MainActivity extends AppCompatActivity {
 
     private void refreshStatus() {
         boolean alive = Shell.shizukuAlive(), granted = alive && Shell.shizukuGranted();
-        if (!alive) setPill(pillShizuku, "Chưa chạy", Tone.NEUTRAL);
-        else if (!granted) setPill(pillShizuku, "Chưa cấp quyền", Tone.WARN);
-        else setPill(pillShizuku, "Sẵn sàng", Tone.OK);
+        if (!alive) setPill(pillShizuku, I18n.t("Chưa chạy"), Tone.NEUTRAL);
+        else if (!granted) setPill(pillShizuku, I18n.t("Chưa cấp quyền"), Tone.WARN);
+        else setPill(pillShizuku, I18n.t("Sẵn sàng"), Tone.OK);
 
         Boolean root = Shell.rootKnown();
-        if (root == null) setPill(pillRoot, "Chưa kiểm tra", Tone.NEUTRAL);
-        else setPill(pillRoot, root ? "Có" : "Không", root ? Tone.OK : Tone.NEUTRAL);
+        if (root == null) setPill(pillRoot, I18n.t("Chưa kiểm tra"), Tone.NEUTRAL);
+        else setPill(pillRoot, root ? I18n.t("Có") : I18n.t("Không"), root ? Tone.OK : Tone.NEUTRAL);
 
         boolean dev = devEnabled();
-        setPill(pillDev, dev ? "Đang bật" : "Đang tắt", dev ? Tone.WARN : Tone.OK);
+        setPill(pillDev, dev ? I18n.t("Đang bật") : I18n.t("Đang tắt"), dev ? Tone.WARN : Tone.OK);
 
         boolean autoOff = prefs.getBoolean("autoOff", true);
         String hint;
         if (Boolean.TRUE.equals(root) || granted) {
-            hint = "Có quyền — bấm để fix ngay" + (autoOff ? ", xong sẽ tự tắt Developer" : "");
+            hint = I18n.t("Có quyền — bấm để fix ngay") + (autoOff ? I18n.t(", xong sẽ tự tắt Developer") : "");
         } else if (canWriteSecure()) {
-            hint = "Sẽ bật Developer và mở Shizuku → bấm Start rồi quay lại, app tự chạy tiếp";
+            hint = I18n.t("Sẽ bật Developer và mở Shizuku → bấm Start rồi quay lại, app tự chạy tiếp");
         } else {
-            hint = "Lần đầu: cần bật Shizuku thủ công (Wireless debugging)";
+            hint = I18n.t("Lần đầu: cần bật Shizuku thủ công (Wireless debugging)");
         }
         runHint.setText(hint);
     }
 
     private void refreshFcm() {
-        setPill(pillFcm, "Đang đọc…", Tone.NEUTRAL);
+        setPill(pillFcm, I18n.t("Đang đọc…"), Tone.NEUTRAL);
         new Thread(() -> {
             FcmStatus s = FcmStatus.query(Shell.available(false), hasDump());
             AlertCenter.checkFcm(this, s.raw);
@@ -414,13 +426,13 @@ public class MainActivity extends AppCompatActivity {
                 fcmDetail = s.detail;
                 String st24 = s.stats24();
                 if (st24 == null) {
-                    setPill(pillFcm24, "Không có dữ liệu", Tone.NEUTRAL);
+                    setPill(pillFcm24, I18n.t("Không có dữ liệu"), Tone.NEUTRAL);
                     subFcm24.setVisibility(View.GONE);
                 } else {
                     // nhãn theo phần đáng chú ý: rớt > 1 phút, tin trễ vượt ngưỡng cảnh báo
                     int bad = Math.max(0, s.longDrops) + Math.max(0, s.seriousDelays);
                     boolean known = s.longDrops >= 0;
-                    setPill(pillFcm24, known ? (bad == 0 ? "Ổn định" : bad + " sự cố") : s.drops24 + " lần rớt",
+                    setPill(pillFcm24, known ? (bad == 0 ? I18n.t("Ổn định") : bad + I18n.t(" sự cố")) : s.drops24 + I18n.t(" lần rớt"),
                             known ? (bad == 0 ? Tone.OK : bad > 5 ? Tone.ERR : Tone.WARN)
                                     : s.drops24 == 0 ? Tone.OK : Tone.WARN);
                     subFcm24.setText(st24);
@@ -430,7 +442,7 @@ public class MainActivity extends AppCompatActivity {
                 setPill(pillFcm, s.label(), s.colorRes());
                 FcmWidget.render(this, s);
                 String sub = s.state == FcmStatus.State.CONNECTED
-                        ? (s.stoppedApps.isEmpty() ? "" : s.stoppedApps.size() + " app bị mất tin (stopped) • bấm xem")
+                        ? (s.stoppedApps.isEmpty() ? "" : s.stoppedApps.size() + I18n.t(" app bị mất tin (stopped) • bấm xem"))
                         : s.summary;
                 subFcm.setText(sub);
                 subFcm.setVisibility(sub.isEmpty() ? View.GONE : View.VISIBLE);
@@ -441,37 +453,37 @@ public class MainActivity extends AppCompatActivity {
     private void showFcmDetail() {
         if (fcmDetail.contains("missing android.permission.PACKAGE_USAGE_STATS")) {
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("Cần cấp quyền 1 lần qua Shizuku")
-                    .setMessage("Android yêu cầu quyền PACKAGE_USAGE_STATS được cấp bằng lệnh pm grant "
-                            + "(công tắc Usage access trong Cài đặt là chưa đủ).\n\n"
-                            + "Bấm \"Fix ngay\" 1 lần khi Shizuku đang chạy — sau đó đọc FCM không cần Shizuku nữa.")
-                    .setPositiveButton("Fix ngay", (d, w) -> onFixClicked())
-                    .setNeutralButton("Chi tiết", (d, w) -> showText("FCM (GcmService)", fcmDetail))
-                    .setNegativeButton("Đóng", null)
+                    .setTitle(I18n.t("Cần cấp quyền 1 lần qua Shizuku"))
+                    .setMessage(I18n.t("Android yêu cầu quyền PACKAGE_USAGE_STATS được cấp bằng lệnh pm grant ")
+                            + I18n.t("(công tắc Usage access trong Cài đặt là chưa đủ).\n\n")
+                            + I18n.t("Bấm \"Fix ngay\" 1 lần khi Shizuku đang chạy — sau đó đọc FCM không cần Shizuku nữa."))
+                    .setPositiveButton(I18n.t("Fix ngay"), (d, w) -> onFixClicked())
+                    .setNeutralButton(I18n.t("Chi tiết"), (d, w) -> showText("FCM (GcmService)", fcmDetail))
+                    .setNegativeButton(I18n.t("Đóng"), null)
                     .show();
             return;
         }
         if (fcmDetail.contains("app ops") || fcmDetail.contains("PACKAGE_USAGE_STATS")) {
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("Cần quyền Usage access")
-                    .setMessage("Để đọc trạng thái FCM mà không cần Shizuku, bật \"GMS Fix\" trong "
-                            + "Quyền truy cập dữ liệu sử dụng (Usage access).\n\n"
-                            + "Hoặc bấm \"Fix ngay\" khi có Shizuku — app sẽ tự cấp.")
-                    .setPositiveButton("Mở Cài đặt", (d, w) -> openUsageAccessSettings())
-                    .setNeutralButton("Chi tiết", (d, w) -> showText("FCM (GcmService)", fcmDetail))
-                    .setNegativeButton("Đóng", null)
+                    .setTitle(I18n.t("Cần quyền Usage access"))
+                    .setMessage(I18n.t("Để đọc trạng thái FCM mà không cần Shizuku, bật \"GMS Fix\" trong ")
+                            + I18n.t("Quyền truy cập dữ liệu sử dụng (Usage access).\n\n")
+                            + I18n.t("Hoặc bấm \"Fix ngay\" khi có Shizuku — app sẽ tự cấp."))
+                    .setPositiveButton(I18n.t("Mở Cài đặt"), (d, w) -> openUsageAccessSettings())
+                    .setNeutralButton(I18n.t("Chi tiết"), (d, w) -> showText("FCM (GcmService)", fcmDetail))
+                    .setNegativeButton(I18n.t("Đóng"), null)
                     .show();
             return;
         }
         if (!fcmStopped.isEmpty()) {
-            StringBuilder msg = new StringBuilder("GMS đã nhận tin nhưng bỏ vì các app này đang bị dừng "
-                    + "(force-stop / dọn RAM). Chúng sẽ không nhận thông báo cho tới khi được mở lại:\n\n");
+            StringBuilder msg = new StringBuilder(I18n.t("GMS đã nhận tin nhưng bỏ vì các app này đang bị dừng ")
+                    + I18n.t("(force-stop / dọn RAM). Chúng sẽ không nhận thông báo cho tới khi được mở lại:\n\n"));
             for (String p : fcmStopped) msg.append("• ").append(appLabel(p)).append("\n");
-            msg.append("\nThêm vào danh sách để fix (No Restrictions + bỏ trạng thái stopped)?");
+            msg.append(I18n.t("\nThêm vào danh sách để fix (No Restrictions + bỏ trạng thái stopped)?"));
             new MaterialAlertDialogBuilder(this)
-                    .setTitle(fcmStopped.size() + " app bị mất thông báo")
+                    .setTitle(fcmStopped.size() + I18n.t(" app bị mất thông báo"))
                     .setMessage(msg.toString())
-                    .setPositiveButton("Thêm & fix", (d, w) -> {
+                    .setPositiveButton(I18n.t("Thêm & fix"), (d, w) -> {
                         Set<String> pk = getPkgs();
                         pk.addAll(fcmStopped);
                         setPkgs(pk);
@@ -481,13 +493,13 @@ public class MainActivity extends AppCompatActivity {
                         renderApps();
                         onFixClicked();
                     })
-                    .setNeutralButton("Chi tiết", (d, w) -> showText("FCM (GcmService)", fcmDetail))
-                    .setNegativeButton("Đóng", null)
+                    .setNeutralButton(I18n.t("Chi tiết"), (d, w) -> showText("FCM (GcmService)", fcmDetail))
+                    .setNegativeButton(I18n.t("Đóng"), null)
                     .show();
             return;
         }
         if (fcmDetail.isEmpty()) {
-            toast("Chưa có dữ liệu");
+            toast(I18n.t("Chưa có dữ liệu"));
             return;
         }
         showText("FCM (GcmService)", fcmDetail);
@@ -517,7 +529,7 @@ public class MainActivity extends AppCompatActivity {
     private void refreshAlerts() {
         java.util.List<String> h = AlertCenter.historyList(this);
         alertRecent.removeAllViews();
-        if (h.isEmpty()) h = java.util.Collections.singletonList("Chưa có cảnh báo nào");
+        if (h.isEmpty()) h = java.util.Collections.singletonList(I18n.t("Chưa có cảnh báo nào"));
         for (String line : h.subList(0, Math.min(3, h.size()))) {
             TextView tv = new TextView(this);
             tv.setText(line);
@@ -531,26 +543,26 @@ public class MainActivity extends AppCompatActivity {
         }
         MaterialButton all = findViewById(R.id.btnAlertClear);
         int n = AlertCenter.historyList(this).size();
-        all.setText(n == 0 ? "Xem log ›" : "Xem tất cả (" + n + ") ›");
+        all.setText(n == 0 ? I18n.t("Xem log ›") : I18n.t("Xem tất cả (") + n + ") ›");
     }
 
     // ---- kiểm soát broadcast (aurogon_enable) ----
 
     private void chooseBcMode() {
-        String[] labels = {"Chỉ tin FCM cho app trong danh sách (khuyên dùng)", "Mọi broadcast (tốn pin hơn)"};
+        String[] labels = {I18n.t("Chỉ tin FCM cho app trong danh sách (khuyên dùng)"), I18n.t("Mọi broadcast (tốn pin hơn)")};
         int sel = BroadcastCtrl.fcmOnly(this) ? 0 : 1;
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Đánh thức app bị đóng băng khi")
+                .setTitle(I18n.t("Đánh thức app bị đóng băng khi"))
                 .setSingleChoiceItems(labels, sel, (d, w) -> {
                     prefs.edit().putString(BroadcastCtrl.PREF_MODE, w == 0 ? "fcm" : "all").apply();
                     if (BroadcastCtrl.wanted(this)) {
                         String err = BroadcastCtrl.apply(this);
-                        if (err != null) toast("Không ghi được: " + err);
+                        if (err != null) toast(I18n.t("Không ghi được: ") + err);
                     }
                     refreshBroadcastCtrl();
                     d.dismiss();
                 })
-                .setNegativeButton("Hủy", null)
+                .setNegativeButton(I18n.t("Hủy"), null)
                 .show();
     }
 
@@ -563,13 +575,13 @@ public class MainActivity extends AppCompatActivity {
             long[] v = DozeTune.liveValues();
             int re = DozeTune.reapplyCount(this);
             // giá trị thật đang dùng: quick_doze_delay_to • idle_to → max_idle_to
-            String values = v == null ? "Không đọc được (thiếu quyền DUMP)"
-                    : "Ngủ sâu sau " + DozeTune.human(Math.min(v[0], 120000)) + " • thức mỗi "
+            String values = v == null ? I18n.t("Không đọc được (thiếu quyền DUMP)")
+                    : I18n.t("Ngủ sâu sau ") + DozeTune.human(Math.min(v[0], 120000)) + I18n.t(" • thức mỗi ")
                     + DozeTune.human(v[1]) + " → " + DozeTune.human(v[2]);
-            String status = !wanted ? (applied ? "⚠ Đang tắt trong app nhưng hệ thống vẫn nới"
-                    : other ? "⚠ Hệ thống đang có thông số doze khác" : "")
-                    : (applied ? "✓ Đang áp dụng" : "⚠ Chưa có hiệu lực")
-                    + (re > 0 ? " • HyperOS đổi lại " + re + " lần (đã ghi lại)" : "");
+            String status = !wanted ? (applied ? I18n.t("⚠ Đang tắt trong app nhưng hệ thống vẫn nới")
+                    : other ? I18n.t("⚠ Hệ thống đang có thông số doze khác") : "")
+                    : (applied ? I18n.t("✓ Đang áp dụng") : I18n.t("⚠ Chưa có hiệu lực"))
+                    + (re > 0 ? I18n.t(" • HyperOS đổi lại ") + re + I18n.t(" lần (đã ghi lại)") : "");
             main.post(() -> {
                 dozeValues.setText(values);
                 dozeStatus.setText(status);
@@ -587,33 +599,218 @@ public class MainActivity extends AppCompatActivity {
         ok = SleepGuard.applied(this);
         ((TextView) findViewById(R.id.nightValues)).setText(SleepGuard.status(this));
         int re = prefs.getInt("nightReapplyCount", 0);
-        String s = wanted ? (ok ? "✓ Đang áp dụng" + (re > 0 ? " • Nighttime mode bị bật lại " + re + " lần (đã tắt)" : "")
-                : SleepGuard.alarmOk(this) ? "⚠ Chưa có hiệu lực" : "⚠ Danh sách alarm chưa có GMS • bấm Fix ngay (cần Shizuku)")
-                : (ok ? "⚠ Đang tắt trong app nhưng hệ thống vẫn giữ" : "");
+        String s = wanted ? (ok ? I18n.t("✓ Đang áp dụng") + (re > 0 ? I18n.t(" • Nighttime mode bị bật lại ") + re + I18n.t(" lần (đã tắt)") : "")
+                : SleepGuard.alarmOk(this) ? I18n.t("⚠ Chưa có hiệu lực") : I18n.t("⚠ Danh sách alarm chưa có GMS • bấm Fix ngay (cần Shizuku)"))
+                : (ok ? I18n.t("⚠ Đang tắt trong app nhưng hệ thống vẫn giữ") : "");
         st.setText(s);
         st.setVisibility(s.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    private androidx.appcompat.app.AlertDialog readyDialog;
+    private android.widget.FrameLayout readyBox;
+
+    /** Checklist đang mở: quay lại từ Cài đặt/Shizuku hoặc vừa trả lời hộp xin quyền → kiểm tra lại. */
+    private void refreshReadinessIfShown() {
+        if (readyDialog != null && readyDialog.isShowing()) showReadiness();
+    }
+
+    /** Hướng dẫn cho 1 mục chưa đạt + nút làm luôn (xin quyền trực tiếp nếu Android cho phép). */
+    private void showItemHelp(Readiness.Item it) {
+        String label;
+        switch (it.action) {
+            case Readiness.ACT_FIX: label = I18n.t("Fix ngay"); break;
+            case Readiness.ACT_GET_SHIZUKU: label = I18n.t("Tải Shizuku"); break;
+            case Readiness.ACT_SHIZUKU: label = Shell.shizukuAlive() ? I18n.t("Cấp quyền") : I18n.t("Mở Shizuku"); break;
+            case Readiness.ACT_NOTIF:
+            case Readiness.ACT_APP_PERMS: label = I18n.t("Cấp quyền"); break;
+            case Readiness.ACT_NONE: label = null; break;
+            default: label = I18n.t("Mở Cài đặt");
+        }
+        MaterialAlertDialogBuilder b = new MaterialAlertDialogBuilder(this)
+                .setTitle(it.name)
+                .setMessage(it.guide)
+                .setNegativeButton(I18n.t("Đóng"), null);
+        if (label != null) b.setPositiveButton(label, (d, w) -> runReadyAction(it.action));
+        b.show();
+    }
+
+    private void runReadyAction(int action) {
+        String self = getPackageName();
+        try {
+            switch (action) {
+                case Readiness.ACT_FIX:
+                    if (readyDialog != null) readyDialog.dismiss();
+                    onFixClicked();
+                    return;
+                case Readiness.ACT_GET_SHIZUKU:
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_URL)));
+                    return;
+                case Readiness.ACT_SHIZUKU:
+                    if (Shell.shizukuAlive() && !Shell.shizukuGranted() && !Shizuku.shouldShowRequestPermissionRationale()) {
+                        Shizuku.requestPermission(SHIZUKU_REQ_CHECK);
+                    } else {
+                        openShizuku();
+                    }
+                    return;
+                case Readiness.ACT_DEV_SETTINGS:
+                    openDeveloperSettings();
+                    return;
+                case Readiness.ACT_USAGE:
+                    openUsageAccessSettings();
+                    return;
+                case Readiness.ACT_NOTIF:
+                    if (Build.VERSION.SDK_INT >= 33 && !shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
+                            && !prefs.getBoolean("notifAsked", false)) {
+                        prefs.edit().putBoolean("notifAsked", true).apply();
+                        requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, CHECK_REQ);
+                    } else {
+                        startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                .putExtra(Settings.EXTRA_APP_PACKAGE, self));
+                    }
+                    return;
+                case Readiness.ACT_EXACT:
+                    startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + self)));
+                    return;
+                case Readiness.ACT_APP_PERMS:
+                    if (!prefs.getBoolean("miuiPermAsked", false)) {
+                        prefs.edit().putBoolean("miuiPermAsked", true).apply();
+                        requestPermissions(new String[]{AppPicker.MIUI_PERM}, CHECK_REQ);
+                        return;
+                    }
+                    try { // trang quyền của Xiaomi
+                        startActivity(new Intent("miui.intent.action.APP_PERM_EDITOR")
+                                .putExtra("extra_pkgname", self));
+                        return;
+                    } catch (ActivityNotFoundException ignored) {
+                    }
+                    break;
+                case Readiness.ACT_BATTERY:
+                    startActivity(NoRestrictGuard.batteryPage(self));
+                    return;
+                case Readiness.ACT_AUTOSTART:
+                    try {
+                        startActivity(new Intent().setClassName("com.miui.securitycenter",
+                                "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+                        return;
+                    } catch (Throwable ignored) {
+                    }
+                    break;
+                case Readiness.ACT_WIFI:
+                    startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+                    return;
+                case Readiness.ACT_GMS_INFO:
+                    startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + Steps.GMS)));
+                    return;
+                default:
+                    return;
+            }
+        } catch (Throwable ignored) {
+        }
+        // Dự phòng: trang thông tin ứng dụng của GMS Fix
+        startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + self)));
+    }
+
+    private void showReadiness() {
+        new Thread(() -> {
+            Readiness.Result r = Readiness.check(this);
+            main.post(() -> {
+                if (isFinishing()) return;
+                if (readyDialog != null && readyDialog.isShowing()) { // cập nhật tại chỗ
+                    readyDialog.setTitle(r.title);
+                    readyBox.removeAllViews();
+                    readyBox.addView(readinessView(r));
+                    return;
+                }
+                readyBox = new android.widget.FrameLayout(this);
+                readyBox.addView(readinessView(r));
+                readyDialog = new MaterialAlertDialogBuilder(this)
+                        .setTitle(r.title)
+                        .setView(readyBox)
+                        .setPositiveButton(I18n.t("Đóng"), null)
+                        .show();
+            });
+        }).start();
+    }
+
+    /** Checklist: tiêu đề nhóm + dòng có huy hiệu màu (✓ xanh / ✗ đỏ / ⚠ vàng / ? xám). */
+    private View readinessView(Readiness.Result r) {
+        float dp = getResources().getDisplayMetrics().density;
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding((int) (24 * dp), (int) (4 * dp), (int) (24 * dp), (int) (8 * dp));
+        int ok = 0, total = 0;
+        for (Object e : r.entries) if (e instanceof Readiness.Item) {
+            total++;
+            if (((Readiness.Item) e).state == Readiness.Item.OK) ok++;
+        }
+        TextView sum = new TextView(this);
+        sum.setText(ok + "/" + total + I18n.t(" mục đạt"));
+        sum.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
+        sum.setTextColor(color(r.missRequired > 0 ? R.color.err : r.missOptional > 0 ? R.color.warn : R.color.ok));
+        box.addView(sum);
+        LayoutInflater inf = LayoutInflater.from(this);
+        for (Object e : r.entries) {
+            if (e instanceof String) {
+                TextView h = new TextView(this);
+                h.setText((String) e);
+                h.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelLarge);
+                h.setTextColor(com.google.android.material.color.MaterialColors.getColor(box,
+                        com.google.android.material.R.attr.colorPrimary));
+                h.setPadding(0, (int) (18 * dp), 0, (int) (2 * dp));
+                box.addView(h);
+                continue;
+            }
+            Readiness.Item it = (Readiness.Item) e;
+            View row = inf.inflate(R.layout.item_check, box, false);
+            int c = color(it.state == Readiness.Item.OK ? R.color.ok : it.state == Readiness.Item.MISSING ? R.color.err
+                    : it.state == Readiness.Item.WARN ? R.color.warn : R.color.neutral);
+            android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+            bg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            bg.setColor((c & 0x00FFFFFF) | 0x33000000);
+            row.findViewById(R.id.badge).setBackground(bg);
+            ImageView mark = row.findViewById(R.id.mark);
+            mark.setImageResource(it.state == Readiness.Item.OK ? R.drawable.ic_check : it.state == Readiness.Item.MISSING
+                    ? R.drawable.ic_close : it.state == Readiness.Item.WARN ? R.drawable.ic_warning : R.drawable.ic_pending);
+            mark.setImageTintList(ColorStateList.valueOf(c));
+            ((TextView) row.findViewById(R.id.name)).setText(it.name);
+            if ((it.state == Readiness.Item.MISSING || it.state == Readiness.Item.WARN) && it.guide != null) {
+                ImageView help = row.findViewById(R.id.help);
+                help.setVisibility(View.VISIBLE);
+                help.setImageTintList(ColorStateList.valueOf(c));
+                help.setOnClickListener(v -> showItemHelp(it));
+                row.setOnClickListener(v -> showItemHelp(it));
+                row.setBackgroundResource(android.R.drawable.list_selector_background);
+            }
+            TextView d = row.findViewById(R.id.detail);
+            if (it.detail == null || it.detail.isEmpty()) d.setVisibility(View.GONE);
+            else d.setText(it.detail);
+            box.addView(row);
+        }
+        androidx.core.widget.NestedScrollView sv = new androidx.core.widget.NestedScrollView(this);
+        sv.addView(box);
+        return sv;
     }
 
     private void showDozeInfo() {
         new Thread(() -> {
             long[] v = DozeTune.liveValues();
             StringBuilder sb = new StringBuilder();
-            sb.append("Tắt màn hình là HyperOS cho máy ngủ sâu rất nhanh. Khi ngủ sâu, máy chủ Google giữ tin FCM "
-                    + "ưu tiên thường (Gmail, Grab, Shopee…) tới lần máy thức kế tiếp — mặc định cách 1 → 6 giờ. "
-                    + "Tin ưu tiên cao (chat, OTP) không bị ảnh hưởng.\n\n"
-                    + "Bật: máy thức gom tin mỗi 15 → 30 phút và chờ ~2 phút trước khi ngủ sâu. Tốn pin hơn chút. "
-                    + "Không cần Shizuku; app tự ghi lại sau khởi động lại.\n\n"
-                    + "Giá trị đang dùng (mặc định HyperOS):\n");
+            sb.append(I18n.t("Tắt màn hình là HyperOS cho máy ngủ sâu rất nhanh. Khi ngủ sâu, máy chủ Google giữ tin FCM ")
+                    + I18n.t("ưu tiên thường (Gmail, Grab, Shopee…) tới lần máy thức kế tiếp — mặc định cách 1 → 6 giờ. ")
+                    + I18n.t("Tin ưu tiên cao (chat, OTP) không bị ảnh hưởng.\n\n")
+                    + I18n.t("Bật: máy thức gom tin mỗi 15 → 30 phút và chờ ~2 phút trước khi ngủ sâu. Tốn pin hơn chút. ")
+                    + I18n.t("Không cần Shizuku; app tự ghi lại sau khởi động lại.\n\n")
+                    + I18n.t("Giá trị đang dùng (mặc định HyperOS):\n"));
             for (int i = 0; i < DozeTune.KEYS.length; i++) {
                 Object[] k = DozeTune.KEYS[i];
-                if (!(Boolean) k[3] && i == 3) sb.append("\nHyperOS bỏ qua (dùng Quick Doze):\n");
+                if (!(Boolean) k[3] && i == 3) sb.append(I18n.t("\nHyperOS bỏ qua (dùng Quick Doze):\n"));
                 sb.append("• ").append(k[1]).append(": ")
                         .append(v == null ? "?" : DozeTune.human(v[i]))
                         .append(" (").append(DozeTune.human((Long) k[2])).append(")\n");
             }
-            sb.append("\nQuick Doze: HyperOS giới hạn tối đa ~2 phút.");
+            sb.append(I18n.t("\nQuick Doze: HyperOS giới hạn tối đa ~2 phút."));
             main.post(() -> new MaterialAlertDialogBuilder(this)
-                    .setTitle("Nới deep doze")
+                    .setTitle(I18n.t("Nới deep doze"))
                     .setMessage(sb.toString())
                     .setPositiveButton("OK", null)
                     .show());
@@ -634,9 +831,9 @@ public class MainActivity extends AppCompatActivity {
         }
         names.sort(String::compareToIgnoreCase);
         new MaterialAlertDialogBuilder(this)
-                .setTitle(names.size() + " app thêm tự động")
-                .setMessage("Có tin FCM thì được mở băng (không cần chọn). Muốn Fix đầy đủ (tự khởi chạy, bỏ "
-                        + "trạng thái dừng…) thì thêm app vào danh sách.\n\n• " + String.join("\n• ", names))
+                .setTitle(names.size() + I18n.t(" app thêm tự động"))
+                .setMessage(I18n.t("Có tin FCM thì được mở băng (không cần chọn). Muốn Fix đầy đủ (tự khởi chạy, bỏ ")
+                        + I18n.t("trạng thái dừng…) thì thêm app vào danh sách.\n\n• ") + String.join("\n• ", names))
                 .setPositiveButton("OK", null)
                 .show();
     }
@@ -649,7 +846,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.swBcAll).setEnabled(wanted && fcmMode);
         findViewById(R.id.row_swBcAll).setAlpha(wanted && fcmMode ? 1f : 0.5f);
         TextView allSub = findViewById(R.id.bcAllSub);
-        allSub.setText("Không chỉ app trong danh sách • " + BroadcastCtrl.fcmApps(this).size() + " app có FCM • xem ›");
+        allSub.setText(I18n.t("Không chỉ app trong danh sách • ") + BroadcastCtrl.fcmApps(this).size() + I18n.t(" app có FCM • xem ›"));
         allSub.setOnClickListener(v -> showAutoFcmApps());
         bcStatus.setVisibility(View.VISIBLE);
         if (wanted) BroadcastCtrl.ensure(this);
@@ -657,46 +854,46 @@ public class MainActivity extends AppCompatActivity {
         String value = BroadcastCtrl.shortValue(BroadcastCtrl.current(this));
         if (!wanted) {
             bcStatus.setText(applied
-                    ? "Đang tắt trong app nhưng hệ thống vẫn có " + value
+                    ? I18n.t("Đang tắt trong app nhưng hệ thống vẫn có ") + value
                     : "");
             if (!applied) bcStatus.setVisibility(View.GONE);
             return;
         }
         if (!applied) {
-            bcStatus.setText("⚠ Chưa có hiệu lực (" + value + ")"
-                    + (BroadcastCtrl.autoReapply(this) ? " • sẽ tự ghi lại" : " • gạt lại công tắc"));
+            bcStatus.setText(I18n.t("⚠ Chưa có hiệu lực (") + value + ")"
+                    + (BroadcastCtrl.autoReapply(this) ? I18n.t(" • sẽ tự ghi lại") : I18n.t(" • gạt lại công tắc")));
             return;
         }
-        bcStatus.setText("✓ " + value + " ▾ • đang đọc Greezer…");
+        bcStatus.setText("✓ " + value + I18n.t(" ▾ • đang đọc Greezer…"));
         new Thread(() -> {
             int thaws = hasDump() ? BroadcastCtrl.recentThaws() : -1;
             int re = BroadcastCtrl.reapplyCount(this);
             main.post(() -> bcStatus.setText("✓ " + value + " ▾"
-                    + (thaws < 0 ? "" : " • " + thaws + " lần mở băng")
-                    + (re > 0 ? " • tự ghi lại " + re + " lần" : "")));
+                    + (thaws < 0 ? "" : " • " + thaws + I18n.t(" lần mở băng"))
+                    + (re > 0 ? I18n.t(" • tự ghi lại ") + re + I18n.t(" lần") : "")));
         }).start();
     }
 
     // ---- kiểm tra cài đặt ----
 
     private void refreshHealth() {
-        setPill(pillHealth, "Đang kiểm tra…", Tone.NEUTRAL);
+        setPill(pillHealth, I18n.t("Đang kiểm tra…"), Tone.NEUTRAL);
         new Thread(() -> {
             int added = NoRestrictGuard.ensure(this);
-            if (added > 0) main.post(() -> toast("Đã cập nhật " + added + " app trong No Restrictions"));
+            if (added > 0) main.post(() -> toast(I18n.t("Đã cập nhật ") + added + I18n.t(" app trong No Restrictions")));
             HealthCheck.Report r = HealthCheck.runAndNotify(this, true);
             main.post(() -> {
                 health = r;
                 if (!r.complete && r.count() == 0) {
-                    setPill(pillHealth, "Chưa đủ quyền", Tone.NEUTRAL);
-                    subHealth.setText("Bấm \"Fix ngay\" 1 lần để cấp quyền đọc");
+                    setPill(pillHealth, I18n.t("Chưa đủ quyền"), Tone.NEUTRAL);
+                    subHealth.setText(I18n.t("Bấm \"Fix ngay\" 1 lần để cấp quyền đọc"));
                     subHealth.setVisibility(View.VISIBLE);
                 } else if (r.count() == 0) {
-                    setPill(pillHealth, "Tất cả ổn", Tone.OK);
+                    setPill(pillHealth, I18n.t("Tất cả ổn"), Tone.OK);
                     subHealth.setVisibility(View.GONE);
                 } else {
-                    setPill(pillHealth, r.count() + " app có vấn đề", Tone.WARN);
-                    subHealth.setText("Bấm để xem chi tiết");
+                    setPill(pillHealth, r.count() + I18n.t(" app có vấn đề"), Tone.WARN);
+                    subHealth.setText(I18n.t("Bấm để xem chi tiết"));
                     subHealth.setVisibility(View.VISIBLE);
                 }
                 refreshAlerts();
@@ -710,22 +907,22 @@ public class MainActivity extends AppCompatActivity {
 
     private void showHealth() {
         if (health == null) {
-            toast("Đang kiểm tra…");
+            toast(I18n.t("Đang kiểm tra…"));
             return;
         }
         if (health.count() == 0) {
-            toast("Tất cả app đã chọn đều ổn");
+            toast(I18n.t("Tất cả app đã chọn đều ổn"));
             return;
         }
         String msg = health.text(getPackageManager())
-                + "\n\n\"Fix ngay\" sẽ áp dụng lại (cần Shizuku hoặc root)."
+                + I18n.t("\n\n\"Fix ngay\" sẽ áp dụng lại (cần Shizuku hoặc root).")
                 + (health.issues.toString().contains(HealthCheck.NOTIF_OFF)
-                ? "\nRiêng \"thông báo đang bị tắt\" phải tự bật trong Cài đặt → Thông báo của app đó." : "");
+                ? I18n.t("\nRiêng \"thông báo đang bị tắt\" phải tự bật trong Cài đặt → Thông báo của app đó.") : "");
         MaterialAlertDialogBuilder b = new MaterialAlertDialogBuilder(this)
-                .setTitle(health.count() + " app có thể bị mất thông báo")
+                .setTitle(health.count() + I18n.t(" app có thể bị mất thông báo"))
                 .setMessage(msg)
-                .setNegativeButton("Đóng", null);
-        if (!health.onlyUserFixable()) b.setPositiveButton("Fix ngay", (d, w) -> onFixClicked());
+                .setNegativeButton(I18n.t("Đóng"), null);
+        if (!health.onlyUserFixable()) b.setPositiveButton(I18n.t("Fix ngay"), (d, w) -> onFixClicked());
         b.show();
     }
 
@@ -738,6 +935,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setPkgs(Set<String> pkgs) {
+        Set<String> added = new LinkedHashSet<>(pkgs);
+        added.removeAll(getPkgs());
+        NoRestrictGuard.adoptAdded(this, added);
         prefs.edit().putStringSet("pkgs", new LinkedHashSet<>(pkgs)).apply();
         if (BroadcastCtrl.wanted(this)) BroadcastCtrl.apply(this);
     }
@@ -799,7 +999,7 @@ public class MainActivity extends AppCompatActivity {
 
             View header = inf.inflate(R.layout.item_group_header, appsList, false);
             ((TextView) header.findViewById(R.id.title)).setText(g.title);
-            ((TextView) header.findViewById(R.id.count)).setText(on + "/" + apps.size() + " đang bật");
+            ((TextView) header.findViewById(R.id.count)).setText(on + "/" + apps.size() + I18n.t(" đang bật"));
             header.findViewById(R.id.chevron).setRotation(isCollapsed ? -90 : 0);
             MaterialSwitch gToggle = header.findViewById(R.id.toggle);
             gToggle.setSaveEnabled(false); // id trùng giữa các nhóm: khôi phục trạng thái sẽ gạt tắt cả danh sách
@@ -828,7 +1028,7 @@ public class MainActivity extends AppCompatActivity {
                 boolean always = alwaysOn.contains(p);
                 TextView sub = row.findViewById(R.id.pkg);
                 boolean mismatch = !always && nrNow != null && nrNow.contains(p);
-                sub.setText(always ? "Luôn chạy nền" : mismatch ? "Chỉ khi có tin • ⚠ pin đang No restrictions ›" : "Chỉ khi có tin");
+                sub.setText(always ? I18n.t("Luôn chạy nền") : mismatch ? I18n.t("Chỉ khi có tin • ⚠ pin đang No restrictions ›") : I18n.t("Chỉ khi có tin"));
                 if (mismatch) {
                     sub.setTextColor(color(R.color.warn));
                     sub.setOnClickListener(v -> openBatteryPage(p, false));
@@ -844,7 +1044,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (PackageManager.NameNotFoundException ignored) {
                     }
                 } else {
-                    label.setText("Chưa cài");
+                    label.setText(I18n.t("Chưa cài"));
                     icon.setImageResource(R.drawable.ic_warning);
                     icon.setImageTintList(ColorStateList.valueOf(color(R.color.warn)));
                 }
@@ -863,9 +1063,9 @@ public class MainActivity extends AppCompatActivity {
                 row.setOnClickListener(v -> toggle.toggle());
                 row.setOnLongClickListener(v -> {
                     new MaterialAlertDialogBuilder(this)
-                            .setTitle("Xoá khỏi danh sách?")
+                            .setTitle(I18n.t("Xoá khỏi danh sách?"))
                             .setMessage(label.getText() + "\n" + p)
-                            .setPositiveButton("Xoá", (d, w) -> {
+                            .setPositiveButton(I18n.t("Xoá"), (d, w) -> {
                                 Set<String> s = getPkgs();
                                 s.remove(p);
                                 setPkgs(s);
@@ -874,7 +1074,7 @@ public class MainActivity extends AppCompatActivity {
                                 setOff(o);
                                 renderApps();
                             })
-                            .setNegativeButton("Hủy", null)
+                            .setNegativeButton(I18n.t("Hủy"), null)
                             .show();
                     return true;
                 });
@@ -883,12 +1083,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         int enabledCount = getEnabledPkgs().size();
-        appsTitle.setText(pkgs.isEmpty() ? "Ứng dụng áp dụng"
-                : "Ứng dụng áp dụng (" + enabledCount + "/" + pkgs.size() + ")");
+        appsTitle.setText(pkgs.isEmpty() ? I18n.t("Ứng dụng áp dụng")
+                : I18n.t("Ứng dụng áp dụng (") + enabledCount + "/" + pkgs.size() + ")");
         appsEmpty.setVisibility(pkgs.isEmpty() ? View.VISIBLE : View.GONE);
         btnRun.setEnabled(!busy && enabledCount > 0);
-        if (enabledCount == 0) btnRun.setText(pkgs.isEmpty() ? "Chọn ít nhất 1 app" : "Bật ít nhất 1 app");
-        else if (!busy) btnRun.setText("Fix ngay");
+        if (enabledCount == 0) btnRun.setText(pkgs.isEmpty() ? I18n.t("Chọn ít nhất 1 app") : I18n.t("Bật ít nhất 1 app"));
+        else if (!busy) btnRun.setText(I18n.t("Fix ngay"));
     }
 
     /** Đổi mức app: "Luôn chạy nền" ⇄ "Chỉ khi có tin", rồi cập nhật No Restrictions (cần Shizuku/root). */
@@ -900,14 +1100,14 @@ public class MainActivity extends AppCompatActivity {
         NoRestrictGuard.setAlwaysOn(this, a);
         renderApps();
         if (!nowAlways && !BroadcastCtrl.wanted(this)) {
-            toast(label + ": cần bật \"Cho FCM đánh thức app bị đóng băng\" để không mất tin");
+            toast(label + I18n.t(": cần bật \"Cho FCM đánh thức app bị đóng băng\" để không mất tin"));
         }
         if (NoRestrictGuard.noBatteryUi(p)) {
             // GMS: không có lựa chọn pin → GMS Fix tự thêm (cần Shizuku); "chỉ khi có tin" thì để PowerKeeper xoá
             new Thread(() -> {
                 int r = NoRestrictGuard.ensure(this);
                 main.post(() -> {
-                    if (r == NoRestrictGuard.NEED_SHELL) toast(label + " • bấm Fix ngay (Shizuku) để áp dụng");
+                    if (r == NoRestrictGuard.NEED_SHELL) toast(label + I18n.t(" • bấm Fix ngay (Shizuku) để áp dụng"));
                     refreshHealth();
                 });
             }).start();
@@ -919,12 +1119,12 @@ public class MainActivity extends AppCompatActivity {
 
     /** Mở trang Battery details của app; nhắc chọn đúng mục theo mức. */
     private void openBatteryPage(String p, boolean always) {
-        toast(always ? "Chọn \"No restrictions\" để luôn chạy nền"
-                : "Chọn \"Battery saver (recommended)\" để được đóng băng khi rảnh");
+        toast(always ? I18n.t("Chọn \"No restrictions\" để luôn chạy nền")
+                : I18n.t("Chọn \"Battery saver (recommended)\" để được đóng băng khi rảnh"));
         try {
             startActivity(NoRestrictGuard.batteryPage(p));
         } catch (Exception e) {
-            toast("Không mở được cài đặt pin: " + e.getMessage());
+            toast(I18n.t("Không mở được cài đặt pin: ") + e.getMessage());
         }
     }
 
@@ -940,6 +1140,14 @@ public class MainActivity extends AppCompatActivity {
         new Thread(() -> {
             Shell.Mode mode = Shell.probeRoot() ? Shell.Mode.ROOT : null;
             main.post(this::refreshStatus);
+            Readiness.Block pre = Readiness.beforeShell(this, mode == Shell.Mode.ROOT);
+            if (pre != null) {
+                main.post(() -> {
+                    setBusy(false);
+                    showBlock(pre);
+                });
+                return;
+            }
             if (mode == null && Shell.shizukuAlive()) {
                 if (!Shell.shizukuGranted()) {
                     requestShizukuPermission();
@@ -975,7 +1183,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (!Shell.shizukuAlive()) return;
         prefs.edit().remove("awaitShizuku").apply();
-        toast("Shizuku đã chạy — tiếp tục fix");
+        toast(I18n.t("Shizuku đã chạy — tiếp tục fix"));
         onFixClicked();
     }
 
@@ -985,12 +1193,12 @@ public class MainActivity extends AppCompatActivity {
             main.post(() -> {
                 setBusy(false);
                 new MaterialAlertDialogBuilder(this)
-                        .setTitle("Shizuku đang chặn GMS Fix")
-                        .setMessage("Trước đây quyền Shizuku của GMS Fix đã bị từ chối, nên Shizuku không hỏi lại nữa.\n\n"
-                                + "Mở Shizuku → Ứng dụng được ủy quyền (Authorized applications) → bật GMS Fix, "
-                                + "rồi quay lại bấm Fix ngay.")
-                        .setPositiveButton("Mở Shizuku", (d, w) -> openShizuku())
-                        .setNegativeButton("Đóng", null)
+                        .setTitle(I18n.t("Shizuku đang chặn GMS Fix"))
+                        .setMessage(I18n.t("Trước đây quyền Shizuku của GMS Fix đã bị từ chối, nên Shizuku không hỏi lại nữa.\n\n")
+                                + I18n.t("Mở Shizuku → Ứng dụng được ủy quyền (Authorized applications) → bật GMS Fix, ")
+                                + I18n.t("rồi quay lại bấm Fix ngay."))
+                        .setPositiveButton(I18n.t("Mở Shizuku"), (d, w) -> openShizuku())
+                        .setNegativeButton(I18n.t("Đóng"), null)
                         .show();
             });
             return;
@@ -1001,20 +1209,42 @@ public class MainActivity extends AppCompatActivity {
 
     private void showFirstTimeHelp() {
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Lần đầu cần bật thủ công")
-                .setMessage("1. Cài đặt → Giới thiệu điện thoại → bấm \"Phiên bản OS\" 7 lần\n"
-                        + "2. Developer options → bật Wireless debugging\n"
-                        + "3. Mở Shizuku → ghép nối (lần đầu) → Start\n"
-                        + "4. Quay lại bấm \"Fix ngay\"\n\n"
-                        + "Từ lần sau app sẽ tự bật Developer và tự tắt sau khi fix.")
-                .setPositiveButton("Mở Cài đặt", (d, w) -> openDeveloperSettings())
-                .setNeutralButton("Mở Shizuku", (d, w) -> openShizuku())
-                .setNegativeButton("Đóng", null)
+                .setTitle(I18n.t("Lần đầu cần bật thủ công"))
+                .setMessage(I18n.t("1. Cài đặt → Giới thiệu điện thoại → bấm \"Phiên bản OS\" 7 lần\n")
+                        + I18n.t("2. Developer options → bật Wireless debugging\n")
+                        + I18n.t("3. Mở Shizuku → ghép nối (lần đầu) → Start\n")
+                        + I18n.t("4. Quay lại bấm \"Fix ngay\"\n\n")
+                        + I18n.t("Từ lần sau app sẽ tự bật Developer và tự tắt sau khi fix."))
+                .setPositiveButton(I18n.t("Mở Cài đặt"), (d, w) -> openDeveloperSettings())
+                .setNeutralButton(I18n.t("Mở Shizuku"), (d, w) -> openShizuku())
+                .setNegativeButton(I18n.t("Đóng"), null)
                 .show();
+    }
+
+    /** Thiếu điều kiện → hướng dẫn đúng mục thiếu, không chạy Fix dở dang. */
+    private void showBlock(Readiness.Block b) {
+        MaterialAlertDialogBuilder d = new MaterialAlertDialogBuilder(this)
+                .setTitle(b.title)
+                .setMessage(b.message)
+                .setNegativeButton(I18n.t("Đóng"), null);
+        if (b.action == Readiness.ACT_DEV_SETTINGS) d.setPositiveButton(I18n.t("Mở Cài đặt"), (x, w) -> openDeveloperSettings());
+        else if (b.action == Readiness.ACT_WIFI) d.setPositiveButton(I18n.t("Mở Cài đặt"), (x, w) -> runReadyAction(Readiness.ACT_WIFI));
+        else if (b.action == Readiness.ACT_SHIZUKU) d.setPositiveButton(I18n.t("Mở Shizuku"), (x, w) -> openShizuku());
+        else if (b.action == Readiness.ACT_GET_SHIZUKU) d.setPositiveButton(I18n.t("Tải Shizuku"), (x, w) ->
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_URL))));
+        d.show();
     }
 
     private void startRun(Shell.Mode mode) {
         new Thread(() -> {
+            Readiness.Block pre = Readiness.beforeRun(this, mode);
+            if (pre != null) {
+                main.post(() -> {
+                    setBusy(false);
+                    showBlock(pre);
+                });
+                return;
+            }
             List<String> pkgs = new ArrayList<>();
             for (String p : getEnabledPkgs()) if (PKG_NAME.matcher(p).matches()) pkgs.add(p);
             List<Steps.Step> steps = Steps.build(pkgs, NoRestrictGuard.alwaysOn(this),
@@ -1027,9 +1257,9 @@ public class MainActivity extends AppCompatActivity {
                 fullLog.setLength(0);
                 resultRows.removeAllViews();
                 for (Steps.Step s : steps) rows.add(addStepRow(s.title));
-                resultMode.setText("Chế độ: " + (mode == Shell.Mode.ROOT ? "root" : "Shizuku")
+                resultMode.setText(I18n.t("Chế độ: ") + (mode == Shell.Mode.ROOT ? "root" : "Shizuku")
                         + " • " + pkgs.size() + " app");
-                setPill(resultSummary, "Đang chạy…", Tone.NEUTRAL);
+                setPill(resultSummary, I18n.t("Đang chạy…"), Tone.NEUTRAL);
                 cardResults.setVisibility(View.VISIBLE);
             });
 
@@ -1037,7 +1267,7 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < steps.size(); i++) {
                 Steps.Step step = steps.get(i);
                 int idx = i;
-                main.post(() -> setStepState(rows.get(idx), null, false, "Đang chạy…", ""));
+                main.post(() -> setStepState(rows.get(idx), null, false, I18n.t("Đang chạy…"), ""));
                 String out, summary;
                 boolean failed;
                 try {
@@ -1057,14 +1287,14 @@ public class MainActivity extends AppCompatActivity {
                     fullLog.append("▶ ").append(step.title).append('\n').append(out).append("\n\n");
                 }
                 boolean f = failed;
-                String sum = f && step.soft ? "Bỏ qua (ROM không hỗ trợ): " + summary : summary;
+                String sum = f && step.soft ? I18n.t("Bỏ qua (ROM không hỗ trợ): ") + summary : summary;
                 String detail = out;
                 main.post(() -> setStepState(rows.get(idx), !f, step.soft, sum, detail));
             }
 
             int okN = ok, warnN = warn, hardN = hard, total = steps.size();
             main.post(() -> {
-                String text = hardN == 0 ? (okN + "/" + total + " thành công") : (hardN + " bước lỗi");
+                String text = hardN == 0 ? (okN + "/" + total + I18n.t(" thành công")) : (hardN + I18n.t(" bước lỗi"));
                 setPill(resultSummary, text, hardN == 0 ? (warnN == 0 ? Tone.OK : Tone.WARN)
                         : okN == 0 ? Tone.ERR : Tone.WARN);
                 setBusy(false);
@@ -1086,17 +1316,17 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Có bước bị lỗi")
-                .setMessage("Vẫn tắt Developer options ngay? (Chọn \"Để sau\" nếu muốn xem log và chạy lại.)")
-                .setPositiveButton("Tắt", (d, w) -> turnOffDeveloper(true))
-                .setNegativeButton("Để sau", null)
+                .setTitle(I18n.t("Có bước bị lỗi"))
+                .setMessage(I18n.t("Vẫn tắt Developer options ngay? (Chọn \"Để sau\" nếu muốn xem log và chạy lại.)"))
+                .setPositiveButton(I18n.t("Tắt"), (d, w) -> turnOffDeveloper(true))
+                .setNegativeButton(I18n.t("Để sau"), null)
                 .show();
     }
 
     private View addStepRow(String title) {
         View row = LayoutInflater.from(this).inflate(R.layout.item_step, resultRows, false);
         ((TextView) row.findViewById(R.id.title)).setText(title);
-        ((TextView) row.findViewById(R.id.summary)).setText("Chờ");
+        ((TextView) row.findViewById(R.id.summary)).setText(I18n.t("Chờ"));
         resultRows.addView(row);
         return row;
     }
@@ -1144,10 +1374,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void onDevOffClicked() {
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Tắt Developer options?")
-                .setMessage("USB & Wireless debugging cũng sẽ tắt, Shizuku sẽ ngừng chạy.")
-                .setPositiveButton("Tắt", (d, w) -> turnOffDeveloper(false))
-                .setNegativeButton("Hủy", null)
+                .setTitle(I18n.t("Tắt Developer options?"))
+                .setMessage(I18n.t("USB & Wireless debugging cũng sẽ tắt, Shizuku sẽ ngừng chạy."))
+                .setPositiveButton(I18n.t("Tắt"), (d, w) -> turnOffDeveloper(false))
+                .setNegativeButton(I18n.t("Hủy"), null)
                 .show();
     }
 
@@ -1158,8 +1388,8 @@ public class MainActivity extends AppCompatActivity {
             main.post(() -> {
                 setBusy(false);
                 refreshStatus();
-                if (ok) toast(auto ? "Fix xong — đã tự tắt Developer options" : "Đã tắt Developer options");
-                else toast("Không có quyền để tắt Developer options");
+                if (ok) toast(auto ? I18n.t("Fix xong — đã tự tắt Developer options") : I18n.t("Đã tắt Developer options"));
+                else toast(I18n.t("Không có quyền để tắt Developer options"));
             });
         }).start();
     }
@@ -1198,16 +1428,16 @@ public class MainActivity extends AppCompatActivity {
         if (i == null) {
             prefs.edit().remove("awaitShizuku").apply();
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("Chưa cài Shizuku")
-                    .setMessage("Cài Shizuku để app có quyền chạy lệnh (không cần root).")
-                    .setPositiveButton("Tải Shizuku", (d, w) ->
+                    .setTitle(I18n.t("Chưa cài Shizuku"))
+                    .setMessage(I18n.t("Cài Shizuku để app có quyền chạy lệnh (không cần root)."))
+                    .setPositiveButton(I18n.t("Tải Shizuku"), (d, w) ->
                             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_URL))))
-                    .setNegativeButton("Đóng", null)
+                    .setNegativeButton(I18n.t("Đóng"), null)
                     .show();
             return;
         }
-        toast(Shell.shizukuAlive() ? "Shizuku đang chạy rồi"
-                : "Bấm \"Start\" trong Shizuku rồi quay lại — app sẽ tự chạy tiếp");
+        toast(Shell.shizukuAlive() ? I18n.t("Shizuku đang chạy rồi")
+                : I18n.t("Bấm \"Start\" trong Shizuku rồi quay lại — app sẽ tự chạy tiếp"));
         startActivity(i);
     }
 
@@ -1258,7 +1488,7 @@ public class MainActivity extends AppCompatActivity {
             btnDevOff.setEnabled(!b);
             btnPickApps.setEnabled(!b);
             renderApps();
-            if (b) btnRun.setText("Đang chạy…");
+            if (b) btnRun.setText(I18n.t("Đang chạy…"));
         });
     }
 
@@ -1282,7 +1512,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showText(String title, String text) {
         TextView tv = new TextView(this);
-        tv.setText(text.isEmpty() ? "(trống)" : text);
+        tv.setText(text.isEmpty() ? I18n.t("(trống)") : text);
         tv.setTypeface(Typeface.MONOSPACE);
         tv.setTextSize(12);
         tv.setTextIsSelectable(true);
@@ -1293,7 +1523,7 @@ public class MainActivity extends AppCompatActivity {
         new MaterialAlertDialogBuilder(this)
                 .setTitle(title)
                 .setView(sv)
-                .setPositiveButton("Đóng", null)
+                .setPositiveButton(I18n.t("Đóng"), null)
                 .show();
     }
 
@@ -1314,5 +1544,6 @@ public class MainActivity extends AppCompatActivity {
                                            @androidx.annotation.NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         AppPicker.onPermissionResult(requestCode);
+        if (requestCode == CHECK_REQ) refreshReadinessIfShown();
     }
 }

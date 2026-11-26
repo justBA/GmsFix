@@ -135,13 +135,13 @@ public class KeepAlive extends BroadcastReceiver {
     static String lastRun(Context ctx) {
         SharedPreferences p = ctx.getSharedPreferences("gmsfix", Context.MODE_PRIVATE);
         long t = p.getLong("kaLast", 0);
-        if (t == 0) return "Chưa chạy (chỉ chạy khi dùng pin)";
+        if (t == 0) return I18n.t("Chưa chạy (chỉ chạy khi dùng pin)");
         long min = (System.currentTimeMillis() - t) / 60000;
         String err = p.getString("kaErr", null);
         int runs = p.getInt("kaRuns", 0), ok = p.getInt("kaOk", 0);
-        String ago = min < 60 ? min + " phút trước" : (min / 60) + " giờ trước";
-        return ago + " • FCM " + (err == null ? p.getString("kaFcm", "?").toLowerCase() : "lỗi")
-                + "\n" + ok + "/" + runs + " lần nối lại OK";
+        String ago = min < 60 ? min + I18n.t(" phút trước") : (min / 60) + I18n.t(" giờ trước");
+        return ago + " • FCM " + (err == null ? p.getString("kaFcm", "?").toLowerCase() : I18n.t("lỗi"))
+                + "\n" + ok + "/" + runs + I18n.t(" lần nối lại OK");
     }
 
     private static PendingIntent pending(Context ctx) {

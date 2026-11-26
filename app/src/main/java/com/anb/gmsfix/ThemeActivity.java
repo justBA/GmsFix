@@ -47,6 +47,7 @@ public class ThemeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         DynamicColors.applyToActivityIfAvailable(this);
         super.onCreate(savedInstanceState);
+        I18n.sync(this);
         setContentView(R.layout.activity_theme);
         prefs = getSharedPreferences("gmsfix", MODE_PRIVATE);
 
@@ -54,23 +55,23 @@ public class ThemeActivity extends AppCompatActivity {
         findViewById(R.id.btnRefresh).setOnClickListener(v -> refresh());
 
         LinearLayout rows = findViewById(R.id.statusRows);
-        pillApplied = addStatusRow(rows, "Theme đã áp dụng", "Giá trị mới đã có hiệu lực trên máy");
-        pillGreezer = addStatusRow(rows, "Greezer đã nhận", "GMS không còn trong danh sách đen (cần khởi động lại)");
-        pillThemeApp = addStatusRow(rows, "App Theme", null);
-        pillRom = addStatusRow(rows, "ROM hỗ trợ", null);
+        pillApplied = addStatusRow(rows, I18n.t("Theme đã áp dụng"), I18n.t("Giá trị mới đã có hiệu lực trên máy"));
+        pillGreezer = addStatusRow(rows, I18n.t("Greezer đã nhận"), I18n.t("GMS không còn trong danh sách đen (cần khởi động lại)"));
+        pillThemeApp = addStatusRow(rows, I18n.t("App Theme"), null);
+        pillRom = addStatusRow(rows, I18n.t("ROM hỗ trợ"), null);
 
         LinearLayout steps = findViewById(R.id.steps);
-        View s1 = addStep(steps, 1, "Tạo theme từ danh sách hiện tại", "", "Tạo theme");
+        View s1 = addStep(steps, 1, I18n.t("Tạo theme từ danh sách hiện tại"), "", I18n.t("Tạo theme"));
         step1Desc = s1.findViewById(R.id.desc);
         step1Btn = s1.findViewById(R.id.action);
         step1Btn.setOnClickListener(v -> buildTheme());
-        View s2 = addStep(steps, 2, "Nhập & áp dụng trong app Theme",
-                "Của tôi → Theme → Nhập → chọn " + ThemeFix.FILE_NAME + " trong Download → Áp dụng “GMS Fix – FCM”",
-                "Mở app Theme");
+        View s2 = addStep(steps, 2, I18n.t("Nhập & áp dụng trong app Theme"),
+                I18n.t("Của tôi → Theme → Nhập → chọn ") + ThemeFix.FILE_NAME + I18n.t(" trong Download → Áp dụng “GMS Fix – FCM”"),
+                I18n.t("Mở app Theme"));
         step2Btn = s2.findViewById(R.id.action);
         step2Btn.setOnClickListener(v -> openThemeApp());
-        addStep(steps, 3, "Khởi động lại máy",
-                "Greezer chỉ đọc danh sách lúc khởi động. Sau khi khởi động lại, mục “Greezer đã nhận” sẽ chuyển xanh.",
+        addStep(steps, 3, I18n.t("Khởi động lại máy"),
+                I18n.t("Greezer chỉ đọc danh sách lúc khởi động. Sau khi khởi động lại, mục “Greezer đã nhận” sẽ chuyển xanh."),
                 null);
 
         findViewById(R.id.btnPickApps).setOnClickListener(v ->
@@ -84,21 +85,21 @@ public class ThemeActivity extends AppCompatActivity {
         advTitle.setOnClickListener(v -> {
             boolean show = adv.getVisibility() != View.VISIBLE;
             adv.setVisibility(show ? View.VISIBLE : View.GONE);
-            advTitle.setText((show ? "▾" : "▸") + " Nâng cao: theme bị tự trả về mặc định?");
+            advTitle.setText((show ? "▾" : "▸") + I18n.t(" Nâng cao: theme bị tự trả về mặc định?"));
         });
         findViewById(R.id.btnRemove).setOnClickListener(v -> new MaterialAlertDialogBuilder(this)
-                .setTitle("Xoá app Theme?")
-                .setMessage("Chỉ làm khi theme GMS Fix bị tự trả về mặc định.\n\n"
-                        + "App Theme (Theme Store + Theme Manager) bị gỡ cho người dùng hiện tại (pm uninstall -k --user 0). Theme đang áp dụng được "
-                        + "giữ nguyên, nhưng không đổi được theme/hình nền cho tới khi Khôi phục.")
-                .setPositiveButton("Xoá", (d, w) -> runPrivileged(
+                .setTitle(I18n.t("Xoá app Theme?"))
+                .setMessage(I18n.t("Chỉ làm khi theme GMS Fix bị tự trả về mặc định.\n\n")
+                        + I18n.t("App Theme (Theme Store + Theme Manager) bị gỡ cho người dùng hiện tại (pm uninstall -k --user 0). Theme đang áp dụng được ")
+                        + I18n.t("giữ nguyên, nhưng không đổi được theme/hình nền cho tới khi Khôi phục."))
+                .setPositiveButton(I18n.t("Xoá"), (d, w) -> runPrivileged(
                         "rc=1; for p in " + String.join(" ", ThemeFix.THEME_PKGS)
-                                + "; do pm uninstall -k --user 0 $p && rc=0; done; exit $rc", "Đã xoá app Theme"))
-                .setNegativeButton("Hủy", null)
+                                + "; do pm uninstall -k --user 0 $p && rc=0; done; exit $rc", I18n.t("Đã xoá app Theme")))
+                .setNegativeButton(I18n.t("Hủy"), null)
                 .show());
         findViewById(R.id.btnRestore).setOnClickListener(v -> runPrivileged(
                 "rc=1; for p in " + String.join(" ", ThemeFix.THEME_PKGS)
-                        + "; do cmd package install-existing --user 0 $p && rc=0; done; exit $rc", "Đã khôi phục app Theme"));
+                        + "; do cmd package install-existing --user 0 $p && rc=0; done; exit $rc", I18n.t("Đã khôi phục app Theme")));
     }
 
     @Override
@@ -112,31 +113,31 @@ public class ThemeActivity extends AppCompatActivity {
     private void refresh() {
         refreshApps();
         boolean supported = ThemeFix.supported(this);
-        setPill(pillRom, supported ? "Có" : "Không", supported ? R.color.ok : R.color.err);
+        setPill(pillRom, supported ? I18n.t("Có") : I18n.t("Không"), supported ? R.color.ok : R.color.err);
         step1Btn.setEnabled(supported);
 
         boolean installed = ThemeFix.themeAppInstalled(this);
-        setPill(pillThemeApp, installed ? "Đang cài" : "Đã xoá", installed ? R.color.neutral : R.color.warn);
+        setPill(pillThemeApp, installed ? I18n.t("Đang cài") : I18n.t("Đã xoá"), installed ? R.color.neutral : R.color.warn);
         step2Btn.setEnabled(installed);
-        step2Btn.setText(installed ? "Mở app Theme" : "App Theme đã xoá — Khôi phục ở Nâng cao");
+        step2Btn.setText(installed ? I18n.t("Mở app Theme") : I18n.t("App Theme đã xoá — Khôi phục ở Nâng cao"));
 
         boolean applied = supported && ThemeFix.activeInApp(this);
-        setPill(pillApplied, applied ? "Đã áp dụng ✓" : "Chưa", applied ? R.color.ok : R.color.neutral);
+        setPill(pillApplied, applied ? I18n.t("Đã áp dụng ✓") : I18n.t("Chưa"), applied ? R.color.ok : R.color.neutral);
 
         // Greezer chỉ có ý nghĩa khi theme đã áp dụng. "systemblack" vắng mặt trong lý do của lần xét gần
         // nhất KHÔNG chứng minh danh sách đã đổi (Greezer có thể dừng sớm ở whiteapp/NO_RESTRICT_APP).
         if (!applied) {
-            setPill(pillGreezer, "Chưa (theme chưa áp dụng)", R.color.neutral);
+            setPill(pillGreezer, I18n.t("Chưa (theme chưa áp dụng)"), R.color.neutral);
             return;
         }
-        setPill(pillGreezer, "Đang đọc…", R.color.neutral);
+        setPill(pillGreezer, I18n.t("Đang đọc…"), R.color.neutral);
         boolean hasDump = checkSelfPermission(Manifest.permission.DUMP) == PackageManager.PERMISSION_GRANTED;
         new Thread(() -> {
             Boolean black = hasDump ? ThemeFix.gmsSystemBlack() : null;
             main.post(() -> {
-                if (black == null) setPill(pillGreezer, "Không rõ", R.color.neutral);
-                else if (black) setPill(pillGreezer, "Cần khởi động lại", R.color.warn);
-                else setPill(pillGreezer, "Có vẻ đã nhận (gián tiếp)", R.color.ok);
+                if (black == null) setPill(pillGreezer, I18n.t("Không rõ"), R.color.neutral);
+                else if (black) setPill(pillGreezer, I18n.t("Cần khởi động lại"), R.color.warn);
+                else setPill(pillGreezer, I18n.t("Có vẻ đã nhận (gián tiếp)"), R.color.ok);
             });
         }).start();
     }
@@ -151,10 +152,10 @@ public class ThemeActivity extends AppCompatActivity {
             if (sb.length() > 0) sb.append("\n");
             sb.append("• ").append(e.getKey().title).append(": ").append(e.getValue());
         }
-        ((TextView) findViewById(R.id.appsTitle)).setText("App được miễn đóng băng (" + pkgs.size() + ")");
-        ((TextView) findViewById(R.id.appsSummary)).setText(sb.length() == 0 ? "Chưa chọn app nào" : sb);
-        step1Desc.setText("Bỏ GMS khỏi danh sách đen của ROM, " + pkgs.size()
-                + " app đang bật không bị đóng băng (kể cả sleep mode). Lưu vào Download/" + ThemeFix.FILE_NAME + ".");
+        ((TextView) findViewById(R.id.appsTitle)).setText(I18n.t("App được miễn đóng băng (") + pkgs.size() + ")");
+        ((TextView) findViewById(R.id.appsSummary)).setText(sb.length() == 0 ? I18n.t("Chưa chọn app nào") : sb);
+        step1Desc.setText(I18n.t("Bỏ GMS khỏi danh sách đen của ROM, ") + pkgs.size()
+                + I18n.t(" app đang bật không bị đóng băng (kể cả sleep mode). Lưu vào Download/") + ThemeFix.FILE_NAME + ".");
     }
 
     // ---- hành động ----
@@ -185,17 +186,17 @@ public class ThemeActivity extends AppCompatActivity {
             String fPath = path, fErr = err;
             main.post(() -> {
                 if (fErr != null) {
-                    new MaterialAlertDialogBuilder(this).setTitle("Không tạo được theme")
-                            .setMessage(fErr).setPositiveButton("Đóng", null).show();
+                    new MaterialAlertDialogBuilder(this).setTitle(I18n.t("Không tạo được theme"))
+                            .setMessage(fErr).setPositiveButton(I18n.t("Đóng"), null).show();
                     return;
                 }
                 new MaterialAlertDialogBuilder(this)
-                        .setTitle("Đã tạo theme")
-                        .setMessage("Đã lưu " + fPath + " (" + pkgs.size() + " app).\n\n"
-                                + "Tiếp theo: mở app Theme → Của tôi → Theme → Nhập → chọn file → Áp dụng, "
-                                + "rồi khởi động lại máy.")
-                        .setPositiveButton("Mở app Theme", (d, w) -> openThemeApp())
-                        .setNegativeButton("Để sau", null)
+                        .setTitle(I18n.t("Đã tạo theme"))
+                        .setMessage(I18n.t("Đã lưu ") + fPath + " (" + pkgs.size() + " app).\n\n"
+                                + I18n.t("Tiếp theo: mở app Theme → Của tôi → Theme → Nhập → chọn file → Áp dụng, ")
+                                + I18n.t("rồi khởi động lại máy."))
+                        .setPositiveButton(I18n.t("Mở app Theme"), (d, w) -> openThemeApp())
+                        .setNegativeButton(I18n.t("Để sau"), null)
                         .show();
             });
         }).start();
@@ -204,7 +205,7 @@ public class ThemeActivity extends AppCompatActivity {
     private void openThemeApp() {
         Intent i = ThemeFix.launchIntent(this);
         if (i == null) {
-            toast("App Theme đã xoá — mở Nâng cao → Khôi phục");
+            toast(I18n.t("App Theme đã xoá — mở Nâng cao → Khôi phục"));
             return;
         }
         startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -217,17 +218,17 @@ public class ThemeActivity extends AppCompatActivity {
                 Shizuku.requestPermission(2001);
             } catch (Throwable ignored) {
             }
-            toast("Cấp quyền cho GMS Fix trong Shizuku rồi bấm lại");
+            toast(I18n.t("Cấp quyền cho GMS Fix trong Shizuku rồi bấm lại"));
             return;
         }
         new Thread(() -> {
             Shell.Mode mode = Shell.available(true);
             if (mode == null) {
                 main.post(() -> new MaterialAlertDialogBuilder(this)
-                        .setTitle("Cần Shizuku hoặc root")
-                        .setMessage("Bật Shizuku (Wireless debugging) rồi thử lại.")
-                        .setPositiveButton("Mở Shizuku", (d, w) -> openShizuku())
-                        .setNegativeButton("Đóng", null)
+                        .setTitle(I18n.t("Cần Shizuku hoặc root"))
+                        .setMessage(I18n.t("Bật Shizuku (Wireless debugging) rồi thử lại."))
+                        .setPositiveButton(I18n.t("Mở Shizuku"), (d, w) -> openShizuku())
+                        .setNegativeButton(I18n.t("Đóng"), null)
                         .show());
                 return;
             }
@@ -244,7 +245,7 @@ public class ThemeActivity extends AppCompatActivity {
             boolean fOk = ok;
             String fOut = out;
             main.post(() -> {
-                toast(fOk ? okMsg : "Lỗi: " + fOut);
+                toast(fOk ? okMsg : I18n.t("Lỗi: ") + fOut);
                 refresh();
             });
         }).start();
