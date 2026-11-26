@@ -154,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
         resultSummary = findViewById(R.id.resultSummary);
         resultMode = findViewById(R.id.resultMode);
 
+        findViewById(R.id.btnReady).setOnClickListener(v -> showReadiness());
         findViewById(R.id.btnRefresh).setOnClickListener(v -> {
             refreshStatus();
             refreshFcm();
@@ -595,6 +596,72 @@ public class MainActivity extends AppCompatActivity {
         st.setVisibility(s.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
+    private void showReadiness() {
+        new Thread(() -> {
+            Readiness.Result r = Readiness.check(this);
+            main.post(() -> {
+                if (isFinishing()) return;
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(r.title)
+                        .setView(readinessView(r))
+                        .setPositiveButton(I18n.t("Đóng"), null)
+                        .setNeutralButton(I18n.t("Fix ngay"), (d, w) -> onFixClicked())
+                        .show();
+            });
+        }).start();
+    }
+
+    /** Checklist: tiêu đề nhóm + dòng có huy hiệu màu (✓ xanh / ✗ đỏ / ⚠ vàng / ? xám). */
+    private View readinessView(Readiness.Result r) {
+        float dp = getResources().getDisplayMetrics().density;
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding((int) (24 * dp), (int) (4 * dp), (int) (24 * dp), (int) (8 * dp));
+        int ok = 0, total = 0;
+        for (Object e : r.entries) if (e instanceof Readiness.Item) {
+            total++;
+            if (((Readiness.Item) e).state == Readiness.Item.OK) ok++;
+        }
+        TextView sum = new TextView(this);
+        sum.setText(ok + "/" + total + I18n.t(" mục đạt"));
+        sum.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
+        sum.setTextColor(color(r.missRequired > 0 ? R.color.err : r.missOptional > 0 ? R.color.warn : R.color.ok));
+        box.addView(sum);
+        LayoutInflater inf = LayoutInflater.from(this);
+        for (Object e : r.entries) {
+            if (e instanceof String) {
+                TextView h = new TextView(this);
+                h.setText((String) e);
+                h.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelLarge);
+                h.setTextColor(com.google.android.material.color.MaterialColors.getColor(box,
+                        com.google.android.material.R.attr.colorPrimary));
+                h.setPadding(0, (int) (18 * dp), 0, (int) (2 * dp));
+                box.addView(h);
+                continue;
+            }
+            Readiness.Item it = (Readiness.Item) e;
+            View row = inf.inflate(R.layout.item_check, box, false);
+            int c = color(it.state == Readiness.Item.OK ? R.color.ok : it.state == Readiness.Item.MISSING ? R.color.err
+                    : it.state == Readiness.Item.WARN ? R.color.warn : R.color.neutral);
+            android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+            bg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            bg.setColor((c & 0x00FFFFFF) | 0x33000000);
+            row.findViewById(R.id.badge).setBackground(bg);
+            ImageView mark = row.findViewById(R.id.mark);
+            mark.setImageResource(it.state == Readiness.Item.OK ? R.drawable.ic_check : it.state == Readiness.Item.MISSING
+                    ? R.drawable.ic_close : it.state == Readiness.Item.WARN ? R.drawable.ic_warning : R.drawable.ic_pending);
+            mark.setImageTintList(ColorStateList.valueOf(c));
+            ((TextView) row.findViewById(R.id.name)).setText(it.name);
+            TextView d = row.findViewById(R.id.detail);
+            if (it.detail == null || it.detail.isEmpty()) d.setVisibility(View.GONE);
+            else d.setText(it.detail);
+            box.addView(row);
+        }
+        androidx.core.widget.NestedScrollView sv = new androidx.core.widget.NestedScrollView(this);
+        sv.addView(box);
+        return sv;
+    }
+
     private void showDozeInfo() {
         new Thread(() -> {
             long[] v = DozeTune.liveValues();
@@ -944,6 +1011,14 @@ public class MainActivity extends AppCompatActivity {
         new Thread(() -> {
             Shell.Mode mode = Shell.probeRoot() ? Shell.Mode.ROOT : null;
             main.post(this::refreshStatus);
+            Readiness.Block pre = Readiness.beforeShell(this, mode == Shell.Mode.ROOT);
+            if (pre != null) {
+                main.post(() -> {
+                    setBusy(false);
+                    showBlock(pre);
+                });
+                return;
+            }
             if (mode == null && Shell.shizukuAlive()) {
                 if (!Shell.shizukuGranted()) {
                     requestShizukuPermission();
@@ -1017,8 +1092,29 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    /** Thiếu điều kiện → hướng dẫn đúng mục thiếu, không chạy Fix dở dang. */
+    private void showBlock(Readiness.Block b) {
+        MaterialAlertDialogBuilder d = new MaterialAlertDialogBuilder(this)
+                .setTitle(b.title)
+                .setMessage(b.message)
+                .setNegativeButton(I18n.t("Đóng"), null);
+        if (b.action == Readiness.ACT_DEV_SETTINGS) d.setPositiveButton(I18n.t("Mở Cài đặt"), (x, w) -> openDeveloperSettings());
+        else if (b.action == Readiness.ACT_SHIZUKU) d.setPositiveButton(I18n.t("Mở Shizuku"), (x, w) -> openShizuku());
+        else if (b.action == Readiness.ACT_GET_SHIZUKU) d.setPositiveButton(I18n.t("Tải Shizuku"), (x, w) ->
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_URL))));
+        d.show();
+    }
+
     private void startRun(Shell.Mode mode) {
         new Thread(() -> {
+            Readiness.Block pre = Readiness.beforeRun(this, mode);
+            if (pre != null) {
+                main.post(() -> {
+                    setBusy(false);
+                    showBlock(pre);
+                });
+                return;
+            }
             List<String> pkgs = new ArrayList<>();
             for (String p : getEnabledPkgs()) if (PKG_NAME.matcher(p).matches()) pkgs.add(p);
             List<Steps.Step> steps = Steps.build(pkgs, NoRestrictGuard.alwaysOn(this),

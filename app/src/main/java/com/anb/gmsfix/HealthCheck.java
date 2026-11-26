@@ -195,7 +195,7 @@ final class HealthCheck {
     }
 
     /** "    Package pkg:" rồi các dòng "      OP (mode):" hoặc "      OP: mode=xxx". */
-    private static Map<String, Map<String, String>> parseAppops(String out) {
+    static Map<String, Map<String, String>> parseAppops(String out) {
         Map<String, Map<String, String>> res = new HashMap<>();
         Pattern pkgLine = Pattern.compile("^ {4}Package ([\\w.]+):");
         Pattern opParen = Pattern.compile("^ +(\\S+) \\((\\w+)\\)");
@@ -217,6 +217,10 @@ final class HealthCheck {
             if (b.find()) cur.put(b.group(1), b.group(2));
         }
         return res;
+    }
+
+    static String shell(String cmd) {
+        return sh(cmd);
     }
 
     private static String sh(String cmd) {

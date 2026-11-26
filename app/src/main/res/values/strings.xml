@@ -58,4 +58,5 @@
     <string name="show_system">Show system apps</string>
     <string name="lang_short">🌐 EN</string>
     <string name="lang_code" translatable="false">en</string>
+    <string name="ready_check">Requirements check</string>
 </resources>

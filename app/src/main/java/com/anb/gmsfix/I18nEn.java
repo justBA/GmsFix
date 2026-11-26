@@ -8,6 +8,8 @@ final class I18nEn {
     private I18nEn() {}
     static final Map<String, String> MAP = new HashMap<>(512);
     static {
+        pPre();
+        pReady();
         p0();
         p1();
         p2();
@@ -373,5 +375,61 @@ final class I18nEn {
         MAP.put("Xem log ›", "View log ›");
         MAP.put(" app trong No Restrictions", " app(s) in No Restrictions");
         MAP.put("App Theme", "Themes app");
+    }
+    private static void pReady() {
+        MAP.put("Ứng dụng", "Apps");
+        MAP.put("chưa cài hoặc bị tắt", "not installed or disabled");
+        MAP.put("chưa cài — cần để bấm Fix (không cần nếu có root)", "not installed — needed for Fix (not needed with root)");
+        MAP.put("Đang chạy", "Running");
+        MAP.put("không cần — máy có root", "not needed — device is rooted");
+        MAP.put("chưa chạy — bấm Fix ngay, app sẽ bật Developer và mở Shizuku", "not running — tap Fix now, the app will enable Developer options and open Shizuku");
+        MAP.put("root (quyền cao nhất)", "root (highest)");
+        MAP.put("adb/shell (đủ cho mọi bước Fix)", "adb/shell (enough for every Fix step)");
+        MAP.put("quyền: ", "privilege: ");
+        MAP.put("GMS Fix được cấp quyền", "GMS Fix authorized");
+        MAP.put("chưa — bấm Fix ngay rồi chọn Allow, hoặc Shizuku → Ứng dụng được ủy quyền", "no — tap Fix now and choose Allow, or Shizuku → Authorized applications");
+        MAP.put("chưa kiểm tra (không bắt buộc)", "not checked (optional)");
+        MAP.put("có", "yes");
+        MAP.put("không (không bắt buộc)", "no (optional)");
+        MAP.put("Quyền của GMS Fix", "GMS Fix permissions");
+        MAP.put("FCM mở băng app, doze, Ban đêm, tắt/bật Developer", "FCM thaw, doze, Night, Developer options toggle");
+        MAP.put("bấm Fix ngay (Shizuku) để cấp", "tap Fix now (Shizuku) to grant");
+        MAP.put("; Xiaomi cần bật USB debugging (Security settings) trước", "; Xiaomi needs USB debugging (Security settings) enabled first");
+        MAP.put("đọc trạng thái FCM, Greezer, kiểm tra cài đặt", "read FCM/Greezer status, settings check");
+        MAP.put("bấm Fix ngay để cấp", "tap Fix now to grant");
+        MAP.put("đọc FCM không cần Shizuku", "read FCM without Shizuku");
+        MAP.put("Thông báo", "Notifications");
+        MAP.put("cảnh báo mất/trễ tin", "lost/delayed message alerts");
+        MAP.put("chưa cho phép — không hiện được cảnh báo", "not allowed — alerts can't be shown");
+        MAP.put("đánh thức GMS đúng giờ", "wake GMS on time");
+        MAP.put("Đọc danh sách ứng dụng đã cài", "Read installed apps list");
+        MAP.put("Cài đặt → Ứng dụng → GMS Fix → Quyền khác", "Settings → Apps → GMS Fix → Other permissions");
+        MAP.put("HyperOS cho GMS Fix", "HyperOS for GMS Fix");
+        MAP.put("Pin: No restrictions", "Battery: No restrictions");
+        MAP.put("Cài đặt pin của GMS Fix → No restrictions", "GMS Fix battery setting → No restrictions");
+        MAP.put("Tự khởi chạy", "Autostart");
+        MAP.put("không đọc được", "can't read");
+        MAP.put("bật trong Cài đặt → Ứng dụng → GMS Fix → Tự khởi chạy", "enable in Settings → Apps → GMS Fix → Autostart");
+        MAP.put("Chạy nền", "Background");
+        MAP.put("đang bị hạn chế", "restricted");
+        MAP.put("Thiếu ", "Missing ");
+        MAP.put(" điều kiện bắt buộc", " required item(s)");
+        MAP.put("Đủ để chạy • ", "Ready to run • ");
+        MAP.put(" mục nên bật thêm", " recommended item(s) missing");
+        MAP.put("Đủ điều kiện ✓", "All requirements met ✓");
+        MAP.put("✓ có • ✗ thiếu (bắt buộc) • ⚠ nên bật • ? chưa biết", "✓ ok • ✗ missing (required) • ⚠ recommended • ? unknown");
+    }
+    private static void pPre() {
+        MAP.put(" mục đạt", " items OK");
+        MAP.put("Không có Google Play services", "Google Play services missing");
+        MAP.put("Máy chưa cài hoặc đang tắt Google Play services — không có FCM để giữ.", "Google Play services is not installed or is disabled — there is no FCM to keep alive.");
+        MAP.put("Fix cần Shizuku (hoặc root) để chạy lệnh.\n\n", "Fix needs Shizuku (or root) to run commands.\n\n");
+        MAP.put("1. Tải và cài Shizuku\n2. Bật Developer options → Wireless debugging\n", "1. Download and install Shizuku\n2. Enable Developer options → Wireless debugging\n");
+        MAP.put("3. Mở Shizuku → ghép nối (lần đầu) → Start\n4. Quay lại bấm Fix ngay", "3. Open Shizuku → pair (first time) → Start\n4. Come back and tap Fix now");
+        MAP.put("Shizuku quá cũ", "Shizuku is too old");
+        MAP.put("Cập nhật Shizuku lên bản mới (v11 trở lên) rồi bấm lại Fix ngay.", "Update Shizuku (v11 or newer) and tap Fix now again.");
+        MAP.put("Cần bật USB debugging (Security settings)", "Enable USB debugging (Security settings)");
+        MAP.put("HyperOS chặn Shizuku cấp quyền WRITE_SECURE_SETTINGS cho tới khi bật mục này — Fix sẽ lỗi giữa chừng.\n\n", "HyperOS blocks Shizuku from granting WRITE_SECURE_SETTINGS until this is on — Fix would fail midway.\n\n");
+        MAP.put("Developer options → USB debugging (Security settings) → bật (Xiaomi có thể yêu cầu đăng nhập Mi account và có SIM), rồi quay lại bấm Fix ngay.", "Developer options → USB debugging (Security settings) → turn on (Xiaomi may require a Mi account and a SIM), then come back and tap Fix now.");
     }
 }

@@ -56,6 +56,15 @@ final class AppPicker {
     static final int PERM_REQ = 1003;
     private static Runnable pending;
 
+    /** ROM có quyền "Đọc danh sách ứng dụng đã cài" của Xiaomi. */
+    static boolean miuiPermExists(android.content.Context ctx) {
+        try {
+            return "com.lbe.security.miui".equals(ctx.getPackageManager().getPermissionInfo(MIUI_PERM, 0).packageName);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     /** ROM có quyền riêng của Xiaomi mà GMS Fix chưa được cho phép. */
     static boolean needsMiuiPerm(android.content.Context ctx) {
         try {
