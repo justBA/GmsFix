@@ -104,13 +104,41 @@ final class Readiness {
 
     static final int ACT_NONE = 0, ACT_DEV_SETTINGS = 1, ACT_SHIZUKU = 2, ACT_GET_SHIZUKU = 3, ACT_FIX = 4,
             ACT_USAGE = 5, ACT_NOTIF = 6, ACT_EXACT = 7, ACT_APP_PERMS = 8, ACT_BATTERY = 9, ACT_AUTOSTART = 10,
-            ACT_GMS_INFO = 11;
+            ACT_GMS_INFO = 11, ACT_WIFI = 12;
+
+    /** Đang nối một mạng Wi-Fi (không cần internet). Duyệt mọi mạng vì VPN có thể là mạng "active". */
+    @SuppressWarnings("deprecation")
+    static boolean wifiConnected(Context ctx) {
+        try {
+            android.net.ConnectivityManager cm = ctx.getSystemService(android.net.ConnectivityManager.class);
+            for (android.net.Network n : cm.getAllNetworks()) {
+                android.net.NetworkCapabilities c = cm.getNetworkCapabilities(n);
+                if (c != null && c.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)) return true;
+            }
+        } catch (Throwable ignored) {
+            return true; // không biết → đừng chặn
+        }
+        return false;
+    }
+
+    static boolean adbWifiOn(Context ctx) {
+        try {
+            return "1".equals(android.provider.Settings.Global.getString(ctx.getContentResolver(), "adb_wifi_enabled"));
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    private static final String WIFI_HELP = "Shizuku (không root) khởi động qua Wireless debugging, mà Android chỉ bật Wireless debugging khi máy đang kết nối Wi-Fi — không cần có internet.\n\nKhông có Wi-Fi: bật điểm phát sóng (hotspot) trên máy khác rồi kết nối vào, hoặc cắm cáp vào máy tính và khởi động Shizuku bằng lệnh adb (xem README).\n\nShizuku đã chạy rồi thì ngắt Wi-Fi cũng không sao.";
 
     /** Trước khi bật Developer/mở Shizuku: chưa cài Shizuku (và không có root) thì hướng dẫn cài luôn. */
     static Block beforeShell(Context ctx, boolean root) {
         if (version(ctx.getPackageManager(), Steps.GMS) == null) {
             return new Block(I18n.t("Không có Google Play services"),
                     I18n.t("Máy chưa cài hoặc đang tắt Google Play services — không có FCM để giữ."), ACT_NONE);
+        }
+        if (!root && !Shell.shizukuAlive() && version(ctx.getPackageManager(), SHIZUKU_PKG) != null && !wifiConnected(ctx)) {
+            return new Block(I18n.t("Cần kết nối Wi-Fi"), I18n.t(WIFI_HELP), ACT_WIFI);
         }
         if (!root && version(ctx.getPackageManager(), SHIZUKU_PKG) == null) {
             return new Block(I18n.t("Chưa cài Shizuku"),
@@ -173,6 +201,15 @@ final class Readiness {
             o.item(rooted ? Boolean.TRUE : null, false, I18n.t("Đang chạy"), rooted ? I18n.t("không cần — máy có root")
                     : I18n.t("chưa chạy — Fix ngay sẽ tự bật Developer và mở Shizuku"));
             o.help(I18n.t("Shizuku dừng mỗi khi khởi động lại máy hoặc tắt Wireless debugging.\n\nCách bật lại: bấm Fix ngay (app tự bật Developer options rồi mở Shizuku), trong Shizuku bấm Start, quay lại app — Fix tự chạy tiếp.\n\nLần đầu: Developer options → Wireless debugging → mở Shizuku → ghép nối bằng mã."), ACT_SHIZUKU);
+            if (!rooted) {
+                boolean wifi = wifiConnected(ctx);
+                o.item(wifi, false, "Wi-Fi", wifi ? I18n.t("đã kết nối — bật được Wireless debugging")
+                        : I18n.t("chưa kết nối — không bật được Wireless debugging để khởi động Shizuku"));
+                o.help(I18n.t(WIFI_HELP), ACT_WIFI);
+                boolean adbw = adbWifiOn(ctx);
+                o.item(adbw ? Boolean.TRUE : null, false, "Wireless debugging", adbw ? I18n.t("đang bật")
+                        : I18n.t("đang tắt — Fix ngay sẽ tự bật"));
+            }
         } else {
             int uid = -1, api = -1;
             try {

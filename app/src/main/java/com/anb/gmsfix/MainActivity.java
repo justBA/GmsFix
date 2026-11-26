@@ -695,6 +695,9 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Throwable ignored) {
                     }
                     break;
+                case Readiness.ACT_WIFI:
+                    startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+                    return;
                 case Readiness.ACT_GMS_INFO:
                     startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + Steps.GMS)));
                     return;
@@ -1226,6 +1229,7 @@ public class MainActivity extends AppCompatActivity {
                 .setMessage(b.message)
                 .setNegativeButton(I18n.t("Đóng"), null);
         if (b.action == Readiness.ACT_DEV_SETTINGS) d.setPositiveButton(I18n.t("Mở Cài đặt"), (x, w) -> openDeveloperSettings());
+        else if (b.action == Readiness.ACT_WIFI) d.setPositiveButton(I18n.t("Mở Cài đặt"), (x, w) -> runReadyAction(Readiness.ACT_WIFI));
         else if (b.action == Readiness.ACT_SHIZUKU) d.setPositiveButton(I18n.t("Mở Shizuku"), (x, w) -> openShizuku());
         else if (b.action == Readiness.ACT_GET_SHIZUKU) d.setPositiveButton(I18n.t("Tải Shizuku"), (x, w) ->
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_URL))));

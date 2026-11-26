@@ -8,6 +8,7 @@ final class I18nEn {
     private I18nEn() {}
     static final Map<String, String> MAP = new HashMap<>(512);
     static {
+        pWifi();
         pHelp();
         pPre();
         pReady();
@@ -449,5 +450,13 @@ final class I18nEn {
         MAP.put("Cài đặt → Ứng dụng → Quản lý ứng dụng → GMS Fix → bật \"Tự khởi chạy\" (Autostart). Để GMS Fix tự chạy lại sau khởi động máy.", "Settings → Apps → Manage apps → GMS Fix → enable \"Autostart\". So GMS Fix starts again after a reboot.");
         MAP.put("Trang pin của GMS Fix → chọn \"No restrictions\" để bỏ hạn chế chạy nền.", "GMS Fix battery page → choose \"No restrictions\" to lift the background restriction.");
         MAP.put("Cấp quyền", "Grant");
+    }
+    private static void pWifi() {
+        MAP.put("Shizuku (không root) khởi động qua Wireless debugging, mà Android chỉ bật Wireless debugging khi máy đang kết nối Wi-Fi — không cần có internet.\n\nKhông có Wi-Fi: bật điểm phát sóng (hotspot) trên máy khác rồi kết nối vào, hoặc cắm cáp vào máy tính và khởi động Shizuku bằng lệnh adb (xem README).\n\nShizuku đã chạy rồi thì ngắt Wi-Fi cũng không sao.", "Without root, Shizuku starts via Wireless debugging, and Android only allows Wireless debugging while the phone is connected to Wi-Fi — internet isn't required.\n\nNo Wi-Fi: turn on a hotspot on another phone and connect to it, or plug into a computer and start Shizuku with the adb command (see README).\n\nOnce Shizuku is running, disconnecting Wi-Fi is fine.");
+        MAP.put("Cần kết nối Wi-Fi", "Wi-Fi connection needed");
+        MAP.put("đã kết nối — bật được Wireless debugging", "connected — Wireless debugging can be enabled");
+        MAP.put("chưa kết nối — không bật được Wireless debugging để khởi động Shizuku", "not connected — Wireless debugging (to start Shizuku) can't be enabled");
+        MAP.put("đang bật", "on");
+        MAP.put("đang tắt — Fix ngay sẽ tự bật", "off — Fix now turns it on");
     }
 }

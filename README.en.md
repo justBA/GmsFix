@@ -33,6 +33,7 @@ Download `GmsFix-3.0.2.apk` from [Releases](https://github.com/justBA/GmsFix/rel
   ```bash
   adb shell 'sh -c "$(pm path moe.shizuku.privileged.api | cut -d: -f2 | sed s/base.apk//)lib/arm64/libshizuku.so"'
   ```
+- **Wireless debugging can only be enabled while the phone is connected to Wi-Fi** (no internet needed). Without Wi-Fi, connect to a hotspot from another phone, or use a cable + the adb command above. Once Shizuku is running, disconnecting Wi-Fi is fine. Fix now warns you if Wi-Fi is missing instead of getting stuck at opening Shizuku.
 - Shizuku **stops** after a reboot or when Wireless debugging / Developer options are turned off. Next time you press Fix, the app turns Developer options on and opens Shizuku so you can tap Start, then continues by itself.
 
 **4. Press *Fix now* in GMS Fix**
