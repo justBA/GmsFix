@@ -18,7 +18,7 @@ An Android app that keeps **notifications (FCM) from being blocked by HyperOS**:
 Do this once. Afterwards Developer options can be turned off again and the app keeps working.
 
 **1. Install the app**
-Download `GmsFix-3.0.3.apk` from [Releases](https://github.com/justBA/GmsFix/releases/latest) and install it. On first launch, allow **Notifications** (needed for lost/delayed message alerts).
+Download `GmsFix-3.0.4.apk` from [Releases](https://github.com/justBA/GmsFix/releases/latest) and install it. On first launch, allow **Notifications** (needed for lost/delayed message alerts).
 
 **2. Enable Developer options**
 *Settings → About phone* → tap **OS version** 7 times. Then go to *Settings → Additional settings → Developer options* and enable:
