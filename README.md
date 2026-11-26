@@ -29,7 +29,10 @@ Tải `GmsFix-3.0.3.apk` ở [Releases](https://github.com/justBA/GmsFix/release
 - **Wireless debugging** (Gỡ lỗi không dây), nếu dùng Shizuku không cần máy tính.
 
 **3. Cài và khởi động Shizuku**
-- Tải Shizuku ở [GitHub](https://github.com/RikkaApps/Shizuku/releases) (máy thử dùng 13.6.0).
+- Tải Shizuku, chọn 1 trong 2 (máy thử dùng 13.6.0):
+  - **Google Play**: [Shizuku trên Google Play](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) — tự cập nhật. ROM CN thường chưa có Google Play Store; có thì dùng cách này.
+  - **GitHub**: [RikkaApps/Shizuku/releases](https://github.com/RikkaApps/Shizuku/releases) → tải file `.apk` mới nhất ở mục *Assets* rồi cài (cho phép "Cài ứng dụng không rõ nguồn gốc" nếu được hỏi).
+  - Nút *Tải Shizuku* trong GMS Fix mở Google Play nếu máy có, không thì mở GitHub.
 - **Ghép nối Shizuku qua Wireless debugging (làm 1 lần, không cần máy tính):**
   1. Kết nối **Wi-Fi** (mạng nào cũng được, không cần internet).
   2. Cho phép **thông báo** của Shizuku: mã ghép nối được nhập ngay trong thông báo của nó.
