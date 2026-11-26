@@ -38,7 +38,7 @@ final class DozeTune {
     }
 
     static boolean wanted(Context ctx) {
-        return prefs(ctx).getBoolean(PREF_ON, false);
+        return prefs(ctx).getBoolean(PREF_ON, true);
     }
 
     static String current(Context ctx) {

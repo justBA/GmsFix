@@ -39,7 +39,7 @@ final class BroadcastCtrl {
     }
 
     static boolean wanted(Context ctx) {
-        return prefs(ctx).getBoolean(PREF_ON, false);
+        return prefs(ctx).getBoolean(PREF_ON, true);
     }
 
     static boolean autoReapply(Context ctx) {

@@ -101,10 +101,10 @@ Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riên
 
 **Tuỳ chọn:**
 - **Đánh thức GMS định kỳ** (5/10/15/20 phút): chỉ chạy khi dùng pin và tắt màn hình. App truy vấn provider của GMS để Greezer mở băng GMS, kiểm tra lại kết nối FCM, nếu hỏng thì thử lại sau 3 phút.
-- **Cho FCM đánh thức app bị đóng băng**: ghi mục `broadcastctrl:true#pkg/com.google.android.c2dm.intent.RECEIVE#…` vào Settings.Global `aurogon_enable`. Greezer chỉ mở băng app khi có tin FCM. Chế độ "mọi broadcast" (`broadcastctrl:false`) cũng có, nhưng tốn pin hơn.
+- **Cho FCM đánh thức app bị đóng băng** (mặc định bật): ghi mục `broadcastctrl:true#pkg/com.google.android.c2dm.intent.RECEIVE#…` vào Settings.Global `aurogon_enable`. Greezer chỉ mở băng app khi có tin FCM. Chế độ "mọi broadcast" (`broadcastctrl:false`) cũng có, nhưng tốn pin hơn.
   - **Tự ghi lại nếu bị đổi**: cloud hoặc HyperOS đổi lại thì app tự ghi lại.
   - **Mọi app có FCM** (mặc định bật): ngoài danh sách đã chọn, thêm mọi app có receiver c2dm. App mới cài tự được thêm. Bấm "xem ›" để xem danh sách.
-- **Nới deep doze**: Settings.Global `device_idle_constants`. Ngủ sâu sau 2 phút, thức gom tin mỗi 15 → 30 phút. Tin ưu tiên thường trễ tối đa ~30 phút, thay vì 1–6 giờ. Nút ⓘ cho xem giá trị đang dùng và giá trị mặc định của HyperOS.
+- **Nới deep doze** (mặc định bật): Settings.Global `device_idle_constants`. Ngủ sâu sau 2 phút, thức gom tin mỗi 15 → 30 phút. Tin ưu tiên thường trễ tối đa ~30 phút, thay vì 1–6 giờ. Nút ⓘ cho xem giá trị đang dùng và giá trị mặc định của HyperOS.
 - **Ban đêm (sleep mode)** (mặc định bật, đã kiểm chứng đêm 24→25/11):
   - Tắt **Nighttime mode**: Settings.Secure `sec_pc_config_scenario_policies_open = 0`. App ghi bằng quyền của nó (**không cần Shizuku**) và tự tắt lại mỗi lần đánh thức GMS hoặc khởi động máy nếu bị bật lại.
   - Thêm Google Play services + GMS Fix vào `cloud_aurogon_alarm_allow_list`, để alarm heartbeat/đánh thức được đi qua khi đang bị đóng băng. Phần này cần Shizuku. Kiểm tra cài đặt sẽ báo nếu bị đặt lại.
@@ -113,7 +113,7 @@ Màn hình chính có 2 hướng xử lý, mỗi hướng một màn hình riên
 - **Mất thông báo**: GMS bỏ tin vì app đang bị dừng.
 - **Thông báo bị trễ**: tin ưu tiên cao trễ hơn 2 phút. Tin ưu tiên thường chỉ ghi vào log khi trễ hơn 35 phút.
 - **Cài đặt bị đổi**: HyperOS đổi lại các quyền chạy nền.
-- **App tắt thông báo**.
+- **App tắt thông báo** (mặc định tắt).
 - Trang **Log** riêng, có lọc theo loại và ghi rõ tên app.
 
 **Trạng thái:** kết nối FCM, thống kê 24 giờ, kiểm tra cài đặt, Shizuku, root, Developer options. Có widget hiển thị trạng thái FCM.

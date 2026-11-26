@@ -79,7 +79,7 @@ final class AlertCenter {
     }
 
     static boolean enabled(Context ctx, Type t) {
-        return prefs(ctx).getBoolean(t.pref(), true);
+        return prefs(ctx).getBoolean(t.pref(), t != Type.NOTIF_OFF); // "App tắt thông báo" mặc định tắt
     }
 
     static void setEnabled(Context ctx, Type t, boolean on) {

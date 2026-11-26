@@ -100,10 +100,10 @@ The home screen offers 2 approaches, each on its own screen. **Only approach 1 w
 
 **Options:**
 - **Wake GMS periodically** (5/10/15/20 minutes): only runs on battery with the screen off. The app queries a GMS provider so Greezer thaws GMS, re-checks the FCM connection, and retries after 3 minutes if it's broken.
-- **Let FCM wake frozen apps**: writes `broadcastctrl:true#pkg/com.google.android.c2dm.intent.RECEIVE#…` to Settings.Global `aurogon_enable`. Greezer only thaws an app when an FCM message arrives. An "every broadcast" mode (`broadcastctrl:false`) also exists but uses more battery.
+- **Let FCM thaw frozen apps** (on by default): writes `broadcastctrl:true#pkg/com.google.android.c2dm.intent.RECEIVE#…` to Settings.Global `aurogon_enable`. Greezer only thaws an app when an FCM message arrives. An "every broadcast" mode (`broadcastctrl:false`) also exists but uses more battery.
   - **Rewrite if changed**: if the cloud config or HyperOS changes it back, the app rewrites it.
   - **All apps with FCM** (on by default): besides the selected list, adds every app with a c2dm receiver. Newly installed apps are added automatically. Tap "view ›" to see the list.
-- **Relax deep doze**: Settings.Global `device_idle_constants`. Deep idle after 2 minutes, maintenance every 15 → 30 minutes. Normal-priority messages are delayed at most ~30 minutes instead of 1–6 hours. The ⓘ button shows the values in use and HyperOS's defaults.
+- **Relax deep doze** (on by default): Settings.Global `device_idle_constants`. Deep idle after 2 minutes, maintenance every 15 → 30 minutes. Normal-priority messages are delayed at most ~30 minutes instead of 1–6 hours. The ⓘ button shows the values in use and HyperOS's defaults.
 - **Night (sleep mode)** (on by default, verified on the night of 24→25/11):
   - Turns off **Nighttime mode**: Settings.Secure `sec_pc_config_scenario_policies_open = 0`. The app writes it with its own permission (**no Shizuku needed**) and turns it off again on every GMS wake-up or boot if it was turned back on.
   - Adds Google Play services + GMS Fix to `cloud_aurogon_alarm_allow_list`, so heartbeat/wake-up alarms get through while frozen. This part needs Shizuku. The settings check reports it if it gets reset.
@@ -112,7 +112,7 @@ The home screen offers 2 approaches, each on its own screen. **Only approach 1 w
 - **Lost notification**: GMS dropped a message because the app is stopped.
 - **Delayed notification**: a high-priority message delayed more than 2 minutes. Normal-priority messages are only logged when delayed more than 35 minutes.
 - **Settings changed**: HyperOS reverted background permissions.
-- **App notifications turned off**.
+- **App notifications off** (off by default).
 - A separate **Log** page, filterable by type, with app names.
 
 **Status:** FCM connection, 24-hour stats, settings check, Shizuku, root, Developer options. A widget shows FCM status.
