@@ -19,7 +19,7 @@ App Android giúp **thông báo (FCM) không bị HyperOS chặn**: không bị 
 Làm 1 lần. Sau đó Developer options tắt lại được, app vẫn chạy.
 
 **1. Cài app**
-Tải `GmsFix-3.0.2.apk` ở [Releases](https://github.com/justBA/GmsFix/releases/latest) rồi cài. Lần mở đầu tiên, cho phép **Thông báo** (cảnh báo mất/trễ tin cần quyền này).
+Tải `GmsFix-3.0.3.apk` ở [Releases](https://github.com/justBA/GmsFix/releases/latest) rồi cài. Lần mở đầu tiên, cho phép **Thông báo** (cảnh báo mất/trễ tin cần quyền này).
 
 **2. Bật Developer options**
 *Cài đặt → Giới thiệu điện thoại* → chạm **Phiên bản OS** 7 lần. Sau đó vào *Cài đặt → Cài đặt bổ sung → Tùy chọn nhà phát triển*, bật:
