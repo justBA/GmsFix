@@ -37,6 +37,7 @@ Tải `GmsFix-3.0.2.apk` ở [Releases](https://github.com/justBA/GmsFix/release
 - Shizuku **dừng** khi khởi động lại máy hoặc khi tắt Wireless debugging / Developer options. Lần sau bấm Fix, app tự bật Developer, mở Shizuku để bạn bấm Start rồi chạy tiếp.
 
 **4. Bấm *Fix ngay* trong GMS Fix**
+- Bấm dấu **ⓘ cạnh chữ Trạng thái** để xem checklist điều kiện (app cần có, Shizuku, từng quyền của GMS Fix). Mục chưa đạt có dấu ! — bấm vào để xem hướng dẫn và mở thẳng trang cài đặt / xin quyền / trang tải. *Fix ngay* chỉ chạy khi đủ điều kiện bắt buộc, thiếu gì sẽ hướng dẫn mục đó thay vì chạy dở.
 - Shizuku hỏi quyền cho GMS Fix → **Allow**. Trên HyperOS 4 CN, Shizuku không lưu "Allow all the time", nên mỗi lần Fix có thể phải bấm Allow lại.
 - Bước *Cấp quyền cho GMS Fix* của Fix tự cấp các quyền sau. Nếu không dùng Shizuku, chạy bằng adb từ máy tính cũng được:
   ```bash

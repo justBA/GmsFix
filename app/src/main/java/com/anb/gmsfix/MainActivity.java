@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int SHIZUKU_REQ = 1001;
     private static final int NOTIF_REQ = 1002;
+    private static final int CHECK_REQ = 1004;          // xin quyền từ checklist
+    private static final int SHIZUKU_REQ_CHECK = 1005;  // quyền Shizuku từ checklist (không tự chạy Fix)
     private static final String SHIZUKU_PKG = "moe.shizuku.privileged.api";
     private static final String SHIZUKU_URL = "https://github.com/RikkaApps/Shizuku/releases";
     private static final Pattern PKG_NAME = Pattern.compile("[A-Za-z0-9_.]+");
@@ -96,6 +98,13 @@ public class MainActivity extends AppCompatActivity {
     private boolean pendingRun;
 
     private final Shizuku.OnRequestPermissionResultListener permListener = (code, result) -> {
+        if (code == SHIZUKU_REQ_CHECK) {
+            main.post(() -> {
+                refreshStatus();
+                refreshReadinessIfShown();
+            });
+            return;
+        }
         if (code != SHIZUKU_REQ) return;
         boolean run = pendingRun;
         pendingRun = false;
@@ -299,6 +308,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         resumed = true;
+        refreshReadinessIfShown();
         refreshStatus();
         refreshFcm();
         refreshKeepAlive();
@@ -596,14 +606,123 @@ public class MainActivity extends AppCompatActivity {
         st.setVisibility(s.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
+    private androidx.appcompat.app.AlertDialog readyDialog;
+    private android.widget.FrameLayout readyBox;
+
+    /** Checklist đang mở: quay lại từ Cài đặt/Shizuku hoặc vừa trả lời hộp xin quyền → kiểm tra lại. */
+    private void refreshReadinessIfShown() {
+        if (readyDialog != null && readyDialog.isShowing()) showReadiness();
+    }
+
+    /** Hướng dẫn cho 1 mục chưa đạt + nút làm luôn (xin quyền trực tiếp nếu Android cho phép). */
+    private void showItemHelp(Readiness.Item it) {
+        String label;
+        switch (it.action) {
+            case Readiness.ACT_FIX: label = I18n.t("Fix ngay"); break;
+            case Readiness.ACT_GET_SHIZUKU: label = I18n.t("Tải Shizuku"); break;
+            case Readiness.ACT_SHIZUKU: label = Shell.shizukuAlive() ? I18n.t("Cấp quyền") : I18n.t("Mở Shizuku"); break;
+            case Readiness.ACT_NOTIF:
+            case Readiness.ACT_APP_PERMS: label = I18n.t("Cấp quyền"); break;
+            case Readiness.ACT_NONE: label = null; break;
+            default: label = I18n.t("Mở Cài đặt");
+        }
+        MaterialAlertDialogBuilder b = new MaterialAlertDialogBuilder(this)
+                .setTitle(it.name)
+                .setMessage(it.guide)
+                .setNegativeButton(I18n.t("Đóng"), null);
+        if (label != null) b.setPositiveButton(label, (d, w) -> runReadyAction(it.action));
+        b.show();
+    }
+
+    private void runReadyAction(int action) {
+        String self = getPackageName();
+        try {
+            switch (action) {
+                case Readiness.ACT_FIX:
+                    if (readyDialog != null) readyDialog.dismiss();
+                    onFixClicked();
+                    return;
+                case Readiness.ACT_GET_SHIZUKU:
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_URL)));
+                    return;
+                case Readiness.ACT_SHIZUKU:
+                    if (Shell.shizukuAlive() && !Shell.shizukuGranted() && !Shizuku.shouldShowRequestPermissionRationale()) {
+                        Shizuku.requestPermission(SHIZUKU_REQ_CHECK);
+                    } else {
+                        openShizuku();
+                    }
+                    return;
+                case Readiness.ACT_DEV_SETTINGS:
+                    openDeveloperSettings();
+                    return;
+                case Readiness.ACT_USAGE:
+                    openUsageAccessSettings();
+                    return;
+                case Readiness.ACT_NOTIF:
+                    if (Build.VERSION.SDK_INT >= 33 && !shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
+                            && !prefs.getBoolean("notifAsked", false)) {
+                        prefs.edit().putBoolean("notifAsked", true).apply();
+                        requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, CHECK_REQ);
+                    } else {
+                        startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                .putExtra(Settings.EXTRA_APP_PACKAGE, self));
+                    }
+                    return;
+                case Readiness.ACT_EXACT:
+                    startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + self)));
+                    return;
+                case Readiness.ACT_APP_PERMS:
+                    if (!prefs.getBoolean("miuiPermAsked", false)) {
+                        prefs.edit().putBoolean("miuiPermAsked", true).apply();
+                        requestPermissions(new String[]{AppPicker.MIUI_PERM}, CHECK_REQ);
+                        return;
+                    }
+                    try { // trang quyền của Xiaomi
+                        startActivity(new Intent("miui.intent.action.APP_PERM_EDITOR")
+                                .putExtra("extra_pkgname", self));
+                        return;
+                    } catch (ActivityNotFoundException ignored) {
+                    }
+                    break;
+                case Readiness.ACT_BATTERY:
+                    startActivity(NoRestrictGuard.batteryPage(self));
+                    return;
+                case Readiness.ACT_AUTOSTART:
+                    try {
+                        startActivity(new Intent().setClassName("com.miui.securitycenter",
+                                "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+                        return;
+                    } catch (Throwable ignored) {
+                    }
+                    break;
+                case Readiness.ACT_GMS_INFO:
+                    startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + Steps.GMS)));
+                    return;
+                default:
+                    return;
+            }
+        } catch (Throwable ignored) {
+        }
+        // Dự phòng: trang thông tin ứng dụng của GMS Fix
+        startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + self)));
+    }
+
     private void showReadiness() {
         new Thread(() -> {
             Readiness.Result r = Readiness.check(this);
             main.post(() -> {
                 if (isFinishing()) return;
-                new MaterialAlertDialogBuilder(this)
+                if (readyDialog != null && readyDialog.isShowing()) { // cập nhật tại chỗ
+                    readyDialog.setTitle(r.title);
+                    readyBox.removeAllViews();
+                    readyBox.addView(readinessView(r));
+                    return;
+                }
+                readyBox = new android.widget.FrameLayout(this);
+                readyBox.addView(readinessView(r));
+                readyDialog = new MaterialAlertDialogBuilder(this)
                         .setTitle(r.title)
-                        .setView(readinessView(r))
+                        .setView(readyBox)
                         .setPositiveButton(I18n.t("Đóng"), null)
                         .setNeutralButton(I18n.t("Fix ngay"), (d, w) -> onFixClicked())
                         .show();
@@ -652,6 +771,14 @@ public class MainActivity extends AppCompatActivity {
                     ? R.drawable.ic_close : it.state == Readiness.Item.WARN ? R.drawable.ic_warning : R.drawable.ic_pending);
             mark.setImageTintList(ColorStateList.valueOf(c));
             ((TextView) row.findViewById(R.id.name)).setText(it.name);
+            if ((it.state == Readiness.Item.MISSING || it.state == Readiness.Item.WARN) && it.guide != null) {
+                ImageView help = row.findViewById(R.id.help);
+                help.setVisibility(View.VISIBLE);
+                help.setImageTintList(ColorStateList.valueOf(c));
+                help.setOnClickListener(v -> showItemHelp(it));
+                row.setOnClickListener(v -> showItemHelp(it));
+                row.setBackgroundResource(android.R.drawable.list_selector_background);
+            }
             TextView d = row.findViewById(R.id.detail);
             if (it.detail == null || it.detail.isEmpty()) d.setVisibility(View.GONE);
             else d.setText(it.detail);
@@ -1414,5 +1541,6 @@ public class MainActivity extends AppCompatActivity {
                                            @androidx.annotation.NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         AppPicker.onPermissionResult(requestCode);
+        if (requestCode == CHECK_REQ) refreshReadinessIfShown();
     }
 }

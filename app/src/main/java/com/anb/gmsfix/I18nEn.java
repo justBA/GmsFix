@@ -8,6 +8,7 @@ final class I18nEn {
     private I18nEn() {}
     static final Map<String, String> MAP = new HashMap<>(512);
     static {
+        pHelp();
         pPre();
         pReady();
         p0();
@@ -420,6 +421,8 @@ final class I18nEn {
         MAP.put("✓ có • ✗ thiếu (bắt buộc) • ⚠ nên bật • ? chưa biết", "✓ ok • ✗ missing (required) • ⚠ recommended • ? unknown");
     }
     private static void pPre() {
+        MAP.put("chưa chạy — Fix ngay sẽ tự bật Developer và mở Shizuku", "not running — Fix now turns on Developer options and opens Shizuku");
+        MAP.put("chưa — Fix ngay sẽ hỏi Allow", "not yet — Fix now will ask you to Allow");
         MAP.put(" mục đạt", " items OK");
         MAP.put("Không có Google Play services", "Google Play services missing");
         MAP.put("Máy chưa cài hoặc đang tắt Google Play services — không có FCM để giữ.", "Google Play services is not installed or is disabled — there is no FCM to keep alive.");
@@ -431,5 +434,20 @@ final class I18nEn {
         MAP.put("Cần bật USB debugging (Security settings)", "Enable USB debugging (Security settings)");
         MAP.put("HyperOS chặn Shizuku cấp quyền WRITE_SECURE_SETTINGS cho tới khi bật mục này — Fix sẽ lỗi giữa chừng.\n\n", "HyperOS blocks Shizuku from granting WRITE_SECURE_SETTINGS until this is on — Fix would fail midway.\n\n");
         MAP.put("Developer options → USB debugging (Security settings) → bật (Xiaomi có thể yêu cầu đăng nhập Mi account và có SIM), rồi quay lại bấm Fix ngay.", "Developer options → USB debugging (Security settings) → turn on (Xiaomi may require a Mi account and a SIM), then come back and tap Fix now.");
+    }
+    private static void pHelp() {
+        MAP.put("Không có Google Play services thì không có FCM.\n\nNếu đang bị tắt: Cài đặt → Ứng dụng → Google Play services → Bật.\nNếu chưa có: cài Google Play services từ cửa hàng ứng dụng của Xiaomi (GetApps) hoặc nguồn tin cậy khác.", "Without Google Play services there is no FCM.\n\nIf it is disabled: Settings → Apps → Google Play services → Enable.\nIf it is missing: install Google Play services from Xiaomi's app store (GetApps) or another trusted source.");
+        MAP.put("Shizuku cho GMS Fix chạy lệnh với quyền adb mà không cần root.\n\n1. Tải bản mới nhất ở GitHub (RikkaApps/Shizuku) và cài\n2. Bật Developer options → Wireless debugging\n3. Mở Shizuku → ghép nối (lần đầu) → Start\n4. Quay lại bấm Fix ngay", "Shizuku lets GMS Fix run commands with adb privileges without root.\n\n1. Download the latest release on GitHub (RikkaApps/Shizuku) and install it\n2. Enable Developer options → Wireless debugging\n3. Open Shizuku → pair (first time) → Start\n4. Come back and tap Fix now");
+        MAP.put("Shizuku dừng mỗi khi khởi động lại máy hoặc tắt Wireless debugging.\n\nCách bật lại: bấm Fix ngay (app tự bật Developer options rồi mở Shizuku), trong Shizuku bấm Start, quay lại app — Fix tự chạy tiếp.\n\nLần đầu: Developer options → Wireless debugging → mở Shizuku → ghép nối bằng mã.", "Shizuku stops after every reboot or when Wireless debugging is turned off.\n\nTo restart it: tap Fix now (the app turns on Developer options and opens Shizuku), tap Start in Shizuku, come back — Fix continues by itself.\n\nFirst time: Developer options → Wireless debugging → open Shizuku → pair with the code.");
+        MAP.put("Bấm Fix ngay và chọn Allow khi Shizuku hỏi.\n\nNếu trước đây đã từ chối (Shizuku không hỏi nữa): mở Shizuku → Ứng dụng được ủy quyền (Authorized applications) → bật GMS Fix.\n\nHyperOS 4 CN: Shizuku không nhớ \"Allow all the time\", mỗi lần Fix có thể phải bấm Allow lại.", "Tap Grant (or Fix now) and choose Allow when Shizuku asks.\n\nIf you denied it before (Shizuku won't ask again): open Shizuku → Authorized applications → enable GMS Fix.\n\nHyperOS 4 CN: Shizuku doesn't remember \"Allow all the time\", so you may need to tap Allow on every Fix.");
+        MAP.put("Bấm Fix ngay khi Shizuku đang chạy — bước \"Cấp quyền cho GMS Fix\" sẽ tự cấp.\n\nXiaomi: phải bật Developer options → USB debugging (Security settings) trước (có thể cần Mi account + SIM).\n\nHoặc dùng máy tính:\n", "Tap Fix now while Shizuku is running — the \"Grant GMS Fix permissions\" step grants it.\n\nXiaomi: enable Developer options → USB debugging (Security settings) first (may need a Mi account + SIM).\n\nOr from a computer:\n");
+        MAP.put("Bật GMS Fix trong Quyền truy cập dữ liệu sử dụng (Usage access), hoặc bấm Fix ngay khi có Shizuku.\n\nMáy tính:\nadb shell pm grant ", "Enable GMS Fix in Usage access, or tap Fix now while Shizuku is available.\n\nFrom a computer:\nadb shell pm grant ");
+        MAP.put("Cài đặt → Thông báo → GMS Fix → bật \"Cho phép thông báo\". Không có quyền này app vẫn fix được, nhưng không báo khi mất/trễ tin.", "Settings → Notifications → GMS Fix → turn on \"Allow notifications\". Without it the app still fixes, but can't alert you about lost/delayed messages.");
+        MAP.put("Cho phép \"Báo thức & lời nhắc\" (Alarms & reminders) cho GMS Fix, hoặc bấm Fix ngay khi có Shizuku. Thiếu thì Đánh thức GMS chạy lệch giờ.", "Allow \"Alarms & reminders\" for GMS Fix, or tap Fix now while Shizuku is available. Without it, Wake GMS runs off schedule.");
+        MAP.put("Cài đặt → Ứng dụng → Quản lý ứng dụng → GMS Fix → Quyền ứng dụng (Quyền khác) → \"Đọc danh sách ứng dụng đã cài\" → Cho phép. Thiếu thì màn Chọn app chỉ thấy app hệ thống.", "Settings → Apps → Manage apps → GMS Fix → App permissions (Other permissions) → \"Read installed apps list\" → Allow. Without it, Choose apps only shows system apps.");
+        MAP.put("Mở trang pin của GMS Fix → chọn \"No restrictions\". Để HyperOS không đóng băng GMS Fix — nếu bị đóng băng thì Đánh thức GMS và tự sửa lại không chạy.", "Open GMS Fix's battery page → choose \"No restrictions\". This keeps HyperOS from freezing GMS Fix — if frozen, Wake GMS and auto re-apply don't run.");
+        MAP.put("Cài đặt → Ứng dụng → Quản lý ứng dụng → GMS Fix → bật \"Tự khởi chạy\" (Autostart). Để GMS Fix tự chạy lại sau khởi động máy.", "Settings → Apps → Manage apps → GMS Fix → enable \"Autostart\". So GMS Fix starts again after a reboot.");
+        MAP.put("Trang pin của GMS Fix → chọn \"No restrictions\" để bỏ hạn chế chạy nền.", "GMS Fix battery page → choose \"No restrictions\" to lift the background restriction.");
+        MAP.put("Cấp quyền", "Grant");
     }
 }

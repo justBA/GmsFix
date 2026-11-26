@@ -29,6 +29,8 @@ final class Readiness {
         static final int OK = 0, MISSING = 1, WARN = 2, UNKNOWN = 3;
         final int state;
         final String name, detail;
+        String guide; // hướng dẫn khi chưa đạt
+        int action;   // ACT_*
 
         Item(int state, String name, String detail) {
             this.state = state;
@@ -57,6 +59,13 @@ final class Readiness {
             if (st == Item.MISSING) r.missRequired++;
             if (st == Item.WARN) r.missOptional++;
             r.entries.add(new Item(st, name, detail));
+        }
+
+        /** Gắn hướng dẫn + nút hành động cho mục vừa thêm (chỉ hiện khi mục chưa đạt). */
+        void help(String guide, int action) {
+            Item it = (Item) r.entries.get(r.entries.size() - 1);
+            it.guide = guide;
+            it.action = action;
         }
     }
 
@@ -93,7 +102,9 @@ final class Readiness {
         }
     }
 
-    static final int ACT_NONE = 0, ACT_DEV_SETTINGS = 1, ACT_SHIZUKU = 2, ACT_GET_SHIZUKU = 3;
+    static final int ACT_NONE = 0, ACT_DEV_SETTINGS = 1, ACT_SHIZUKU = 2, ACT_GET_SHIZUKU = 3, ACT_FIX = 4,
+            ACT_USAGE = 5, ACT_NOTIF = 6, ACT_EXACT = 7, ACT_APP_PERMS = 8, ACT_BATTERY = 9, ACT_AUTOSTART = 10,
+            ACT_GMS_INFO = 11;
 
     /** Trước khi bật Developer/mở Shizuku: chưa cài Shizuku (và không có root) thì hướng dẫn cài luôn. */
     static Block beforeShell(Context ctx, boolean root) {
@@ -145,8 +156,12 @@ final class Readiness {
         o.section(I18n.t("Ứng dụng"));
         String gms = version(pm, Steps.GMS);
         o.item(gms != null, true, "Google Play services", gms != null ? gms : I18n.t("chưa cài hoặc bị tắt"));
+        o.help(I18n.t("Không có Google Play services thì không có FCM.\n\nNếu đang bị tắt: Cài đặt → Ứng dụng → Google Play services → Bật.\nNếu chưa có: cài Google Play services từ cửa hàng ứng dụng của Xiaomi (GetApps) hoặc nguồn tin cậy khác."), ACT_GMS_INFO);
         String shz = version(pm, SHIZUKU_PKG);
-        o.item(shz != null, false, "Shizuku", shz != null ? shz : I18n.t("chưa cài — cần để bấm Fix (không cần nếu có root)"));
+        boolean rooted = Boolean.TRUE.equals(Shell.rootKnown());
+        o.item(shz != null || rooted, false, "Shizuku", shz != null ? shz
+                : rooted ? I18n.t("không cần — máy có root") : I18n.t("chưa cài — cần để bấm Fix (không cần nếu có root)"));
+        o.help(I18n.t("Shizuku cho GMS Fix chạy lệnh với quyền adb mà không cần root.\n\n1. Tải bản mới nhất ở GitHub (RikkaApps/Shizuku) và cài\n2. Bật Developer options → Wireless debugging\n3. Mở Shizuku → ghép nối (lần đầu) → Start\n4. Quay lại bấm Fix ngay"), ACT_GET_SHIZUKU);
         o.item(true, true, "GMS Fix", version(pm, self));
 
         // ---- Shizuku ----
@@ -154,8 +169,10 @@ final class Readiness {
         boolean alive = Shell.shizukuAlive();
         Boolean root = Shell.rootKnown();
         if (!alive) {
-            o.item(false, false, I18n.t("Đang chạy"), Boolean.TRUE.equals(root) ? I18n.t("không cần — máy có root")
-                    : I18n.t("chưa chạy — bấm Fix ngay, app sẽ bật Developer và mở Shizuku"));
+            // Fix ngay tự bật Developer + mở Shizuku → không tính là thiếu (dòng xám)
+            o.item(rooted ? Boolean.TRUE : null, false, I18n.t("Đang chạy"), rooted ? I18n.t("không cần — máy có root")
+                    : I18n.t("chưa chạy — Fix ngay sẽ tự bật Developer và mở Shizuku"));
+            o.help(I18n.t("Shizuku dừng mỗi khi khởi động lại máy hoặc tắt Wireless debugging.\n\nCách bật lại: bấm Fix ngay (app tự bật Developer options rồi mở Shizuku), trong Shizuku bấm Start, quay lại app — Fix tự chạy tiếp.\n\nLần đầu: Developer options → Wireless debugging → mở Shizuku → ghép nối bằng mã."), ACT_SHIZUKU);
         } else {
             int uid = -1, api = -1;
             try {
@@ -168,21 +185,24 @@ final class Readiness {
                     : uid < 0 ? "?" : "uid " + uid;
             o.item(true, false, I18n.t("Đang chạy"), I18n.t("quyền: ") + level + (api > 0 ? " • API " + api : ""));
             boolean g = Shell.shizukuGranted();
-            o.item(g, false, I18n.t("GMS Fix được cấp quyền"), g ? null
-                    : I18n.t("chưa — bấm Fix ngay rồi chọn Allow, hoặc Shizuku → Ứng dụng được ủy quyền"));
+            o.item(g ? Boolean.TRUE : null, false, I18n.t("GMS Fix được cấp quyền"), g ? null
+                    : I18n.t("chưa — Fix ngay sẽ hỏi Allow"));
+            o.help(I18n.t("Bấm Fix ngay và chọn Allow khi Shizuku hỏi.\n\nNếu trước đây đã từ chối (Shizuku không hỏi nữa): mở Shizuku → Ứng dụng được ủy quyền (Authorized applications) → bật GMS Fix.\n\nHyperOS 4 CN: Shizuku không nhớ \"Allow all the time\", mỗi lần Fix có thể phải bấm Allow lại."), ACT_SHIZUKU);
         }
-        o.item(root == null ? null : root, false, "Root", root == null ? I18n.t("chưa kiểm tra (không bắt buộc)")
-                : root ? I18n.t("có") : I18n.t("không (không bắt buộc)"));
 
         // ---- Quyền của GMS Fix ----
         o.section(I18n.t("Quyền của GMS Fix"));
+        String grantHelp = I18n.t("Bấm Fix ngay khi Shizuku đang chạy — bước \"Cấp quyền cho GMS Fix\" sẽ tự cấp.\n\nXiaomi: phải bật Developer options → USB debugging (Security settings) trước (có thể cần Mi account + SIM).\n\nHoặc dùng máy tính:\n");
         boolean wss = granted(ctx, Manifest.permission.WRITE_SECURE_SETTINGS);
         String adbSec = prop("persist.security.adbinput");
         o.item(wss, true, "WRITE_SECURE_SETTINGS", wss ? I18n.t("FCM mở băng app, doze, Ban đêm, tắt/bật Developer")
                 : I18n.t("bấm Fix ngay (Shizuku) để cấp")
                 + ("1".equals(adbSec) ? "" : I18n.t("; Xiaomi cần bật USB debugging (Security settings) trước")));
+        o.help(grantHelp + "adb shell pm grant " + self + " android.permission.WRITE_SECURE_SETTINGS",
+                adbSec != null && !adbSec.isEmpty() && !"1".equals(adbSec) ? ACT_DEV_SETTINGS : ACT_FIX);
         boolean dump = granted(ctx, Manifest.permission.DUMP);
         o.item(dump, true, "DUMP", dump ? I18n.t("đọc trạng thái FCM, Greezer, kiểm tra cài đặt") : I18n.t("bấm Fix ngay để cấp"));
+        o.help(grantHelp + "adb shell pm grant " + self + " android.permission.DUMP", ACT_FIX);
         boolean usage = false;
         try {
             AppOpsManager aom = ctx.getSystemService(AppOpsManager.class);
@@ -194,8 +214,11 @@ final class Readiness {
         } catch (Throwable ignored) {
         }
         o.item(usage, false, "Usage access", usage ? I18n.t("đọc FCM không cần Shizuku") : I18n.t("bấm Fix ngay để cấp"));
+        o.help(I18n.t("Bật GMS Fix trong Quyền truy cập dữ liệu sử dụng (Usage access), hoặc bấm Fix ngay khi có Shizuku.\n\nMáy tính:\nadb shell pm grant ") + self
+                + " android.permission.PACKAGE_USAGE_STATS\nadb shell cmd appops set " + self + " GET_USAGE_STATS allow", ACT_USAGE);
         boolean notif = Build.VERSION.SDK_INT < 33 || granted(ctx, Manifest.permission.POST_NOTIFICATIONS);
         o.item(notif, false, I18n.t("Thông báo"), notif ? I18n.t("cảnh báo mất/trễ tin") : I18n.t("chưa cho phép — không hiện được cảnh báo"));
+        o.help(I18n.t("Cài đặt → Thông báo → GMS Fix → bật \"Cho phép thông báo\". Không có quyền này app vẫn fix được, nhưng không báo khi mất/trễ tin."), ACT_NOTIF);
         boolean exact = true;
         if (Build.VERSION.SDK_INT >= 31) {
             try {
@@ -204,10 +227,12 @@ final class Readiness {
             }
         }
         o.item(exact, false, "Exact alarm", exact ? I18n.t("đánh thức GMS đúng giờ") : I18n.t("bấm Fix ngay để cấp"));
+        o.help(I18n.t("Cho phép \"Báo thức & lời nhắc\" (Alarms & reminders) cho GMS Fix, hoặc bấm Fix ngay khi có Shizuku. Thiếu thì Đánh thức GMS chạy lệch giờ."), ACT_EXACT);
         if (AppPicker.miuiPermExists(ctx)) {
             boolean apps = !AppPicker.needsMiuiPerm(ctx);
             o.item(apps, false, I18n.t("Đọc danh sách ứng dụng đã cài"), apps ? null
                     : I18n.t("Cài đặt → Ứng dụng → GMS Fix → Quyền khác"));
+            o.help(I18n.t("Cài đặt → Ứng dụng → Quản lý ứng dụng → GMS Fix → Quyền ứng dụng (Quyền khác) → \"Đọc danh sách ứng dụng đã cài\" → Cho phép. Thiếu thì màn Chọn app chỉ thấy app hệ thống."), ACT_APP_PERMS);
         }
 
         // ---- HyperOS cho chính GMS Fix ----
@@ -221,9 +246,10 @@ final class Readiness {
         boolean inNr = nr != null && NoRestrictGuard.parse(nr).contains(self);
         o.item(battery || inNr, false, I18n.t("Pin: No restrictions"), battery || inNr ? null
                 : I18n.t("Cài đặt pin của GMS Fix → No restrictions"));
+        o.help(I18n.t("Mở trang pin của GMS Fix → chọn \"No restrictions\". Để HyperOS không đóng băng GMS Fix — nếu bị đóng băng thì Đánh thức GMS và tự sửa lại không chạy."), ACT_BATTERY);
         if (dump) {
             Map<String, String> ops = HealthCheck.parseAppops(HealthCheck.shell(
-                    "dumpsys appops --package " + self + " | grep -E '^    Package |MIUIOP\\(10008\\)|MIUIOP\\(10053\\)|RUN_ANY_IN_BACKGROUND'"))
+                    "dumpsys appops | grep -E '^    Package |MIUIOP\\(10008\\)|MIUIOP\\(10053\\)|RUN_ANY_IN_BACKGROUND'"))
                     .get(self);
             String a = ops == null ? null : ops.get("MIUIOP(10008)");
             String sw = ops == null ? null : ops.get("MIUIOP(10053)");
@@ -231,9 +257,11 @@ final class Readiness {
                     : (a == null || a.equals("allow")) && (sw == null || sw.equals("allow"));
             o.item(auto, false, I18n.t("Tự khởi chạy"), auto == null ? I18n.t("không đọc được")
                     : auto ? null : I18n.t("bật trong Cài đặt → Ứng dụng → GMS Fix → Tự khởi chạy"));
+            o.help(I18n.t("Cài đặt → Ứng dụng → Quản lý ứng dụng → GMS Fix → bật \"Tự khởi chạy\" (Autostart). Để GMS Fix tự chạy lại sau khởi động máy."), ACT_AUTOSTART);
             String bg = ops == null ? null : ops.get("RUN_ANY_IN_BACKGROUND");
             boolean bgOk = bg == null || !(bg.equals("ignore") || bg.equals("deny"));
             o.item(bgOk, false, I18n.t("Chạy nền"), bgOk ? null : I18n.t("đang bị hạn chế"));
+            o.help(I18n.t("Trang pin của GMS Fix → chọn \"No restrictions\" để bỏ hạn chế chạy nền."), ACT_BATTERY);
         }
 
         Result r = o.r;

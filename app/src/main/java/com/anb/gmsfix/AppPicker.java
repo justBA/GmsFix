@@ -73,7 +73,22 @@ final class AppPicker {
         } catch (Throwable t) {
             return false; // ROM không có quyền này (không phải Xiaomi)
         }
-        return ctx.checkSelfPermission(MIUI_PERM) != PackageManager.PERMISSION_GRANTED;
+        if (ctx.checkSelfPermission(MIUI_PERM) == PackageManager.PERMISSION_GRANTED) return false;
+        // HyperOS điều khiển quyền này bằng appop MIUIOP(10022): trạng thái runtime có thể "chưa cấp" mà vẫn
+        // được phép → kiểm tra thực tế: thấy được app do người dùng cài nào không.
+        return !userAppsVisible(ctx);
+    }
+
+    static boolean userAppsVisible(android.content.Context ctx) {
+        try {
+            for (ApplicationInfo ai : ctx.getPackageManager().getInstalledApplications(0)) {
+                if ((ai.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) == 0
+                        && !ai.packageName.equals(ctx.getPackageName())
+                        && !ai.packageName.equals(Readiness.SHIZUKU_PKG)) return true;
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
     }
 
     /** Gọi từ onRequestPermissionsResult của Activity: mở lại danh sách sau khi người dùng trả lời. */
