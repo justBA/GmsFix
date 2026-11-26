@@ -197,10 +197,6 @@ final class Readiness {
         boolean alive = Shell.shizukuAlive();
         Boolean root = Shell.rootKnown();
         if (!alive) {
-            // Fix ngay tự bật Developer + mở Shizuku → không tính là thiếu (dòng xám)
-            o.item(rooted ? Boolean.TRUE : null, false, I18n.t("Đang chạy"), rooted ? I18n.t("không cần — máy có root")
-                    : I18n.t("chưa chạy — app tự bật Developer và mở Shizuku khi cần"));
-            o.help(I18n.t("Shizuku dừng mỗi khi khởi động lại máy hoặc tắt Wireless debugging.\n\nCách bật lại: bấm Fix ngay (app tự bật Developer options rồi mở Shizuku), trong Shizuku bấm Start, quay lại app — Fix tự chạy tiếp.\n\nLần đầu: Developer options → Wireless debugging → mở Shizuku → ghép nối bằng mã."), ACT_SHIZUKU);
             if (!rooted) {
                 boolean wifi = wifiConnected(ctx);
                 o.item(wifi, false, "Wi-Fi", wifi ? I18n.t("đã kết nối — bật được Wireless debugging")
@@ -210,6 +206,10 @@ final class Readiness {
                 o.item(adbw ? Boolean.TRUE : null, false, "Wireless debugging", adbw ? I18n.t("đang bật")
                         : I18n.t("đang tắt — app tự bật khi cần"));
             }
+            // Fix ngay tự bật Developer + mở Shizuku → không tính là thiếu (dòng xám)
+            o.item(rooted ? Boolean.TRUE : null, false, I18n.t("Đang chạy"), rooted ? I18n.t("không cần — máy có root")
+                    : I18n.t("chưa chạy — app tự bật Developer và mở Shizuku khi cần"));
+            o.help(I18n.t("Shizuku dừng mỗi khi khởi động lại máy hoặc tắt Wireless debugging.\n\nCách bật lại: bấm Fix ngay (app tự bật Developer options rồi mở Shizuku), trong Shizuku bấm Start, quay lại app — Fix tự chạy tiếp.\n\nLần đầu: Developer options → Wireless debugging → mở Shizuku → ghép nối bằng mã."), ACT_SHIZUKU);
         } else {
             int uid = -1, api = -1;
             try {
@@ -220,11 +220,11 @@ final class Readiness {
             String level = uid == 0 ? I18n.t("root (quyền cao nhất)")
                     : uid == 2000 ? I18n.t("adb/shell (đủ cho mọi bước Fix)")
                     : uid < 0 ? "?" : "uid " + uid;
-            o.item(true, false, I18n.t("Đang chạy"), I18n.t("quyền: ") + level + (api > 0 ? " • API " + api : ""));
             boolean g = Shell.shizukuGranted();
             o.item(g ? Boolean.TRUE : null, false, I18n.t("GMS Fix được cấp quyền"), g ? null
                     : I18n.t("chưa — Shizuku sẽ hỏi Allow khi cần"));
             o.help(I18n.t("Bấm Fix ngay và chọn Allow khi Shizuku hỏi.\n\nNếu trước đây đã từ chối (Shizuku không hỏi nữa): mở Shizuku → Ứng dụng được ủy quyền (Authorized applications) → bật GMS Fix.\n\nHyperOS 4 CN: Shizuku không nhớ \"Allow all the time\", mỗi lần Fix có thể phải bấm Allow lại."), ACT_SHIZUKU);
+            o.item(true, false, I18n.t("Đang chạy"), I18n.t("quyền: ") + level + (api > 0 ? " • API " + api : ""));
         }
 
         // ---- Quyền của GMS Fix ----
