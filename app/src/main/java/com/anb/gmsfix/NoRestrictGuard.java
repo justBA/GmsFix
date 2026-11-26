@@ -63,18 +63,31 @@ final class NoRestrictGuard {
      * App "Luôn chạy nền" (giữ trong No Restrictions → Greezer không bao giờ đóng băng).
      * App còn lại trong danh sách là "Chỉ khi có tin": được đóng băng khi rảnh, tin FCM tới thì
      * BroadcastCtrl (aurogon broadcastctrl) mở băng → tiết kiệm pin.
-     * Chưa chọn lần nào → mặc định nhóm Hệ thống (GMS, MiPush…) và Đồng hồ.
+     * Chưa chọn lần nào → nhóm Hệ thống (GMS, MiPush…), Đồng hồ, và app mà cài đặt pin đang để "No restrictions"
+     * (theo đúng lựa chọn sẵn có của người dùng — không báo ⚠ lệch cho cả danh sách khi mới cài trên máy khác).
      */
     static Set<String> alwaysOn(Context ctx) {
         SharedPreferences p = prefs(ctx);
         if (p.contains(PREF_ALWAYS_ON)) return new LinkedHashSet<>(p.getStringSet(PREF_ALWAYS_ON, new LinkedHashSet<>()));
         Set<String> d = new LinkedHashSet<>();
+        Set<String> nr = parse(read(ctx));
         android.content.pm.PackageManager pm = ctx.getPackageManager();
         for (String pkg : p.getStringSet("pkgs", new LinkedHashSet<>())) {
             AppGroups.Group g = AppGroups.of(pm, pkg);
-            if (g == AppGroups.Group.SYSTEM || g == AppGroups.Group.WEAR) d.add(pkg);
+            if (g == AppGroups.Group.SYSTEM || g == AppGroups.Group.WEAR || nr.contains(pkg)) d.add(pkg);
         }
         return d;
+    }
+
+    /** App vừa thêm vào danh sách: cài đặt pin đang "No restrictions" thì cho vào "Luôn chạy nền" luôn. */
+    static void adoptAdded(Context ctx, Set<String> added) {
+        SharedPreferences p = prefs(ctx);
+        if (added.isEmpty() || !p.contains(PREF_ALWAYS_ON)) return; // chưa chọn lần nào → alwaysOn() tự theo cài đặt pin
+        Set<String> nr = parse(read(ctx));
+        Set<String> a = alwaysOn(ctx);
+        boolean ch = false;
+        for (String pkg : added) if (nr.contains(pkg)) ch |= a.add(pkg);
+        if (ch) setAlwaysOn(ctx, a);
     }
 
     static void setAlwaysOn(Context ctx, Set<String> s) {

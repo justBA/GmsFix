@@ -739,6 +739,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setPkgs(Set<String> pkgs) {
+        Set<String> added = new LinkedHashSet<>(pkgs);
+        added.removeAll(getPkgs());
+        NoRestrictGuard.adoptAdded(this, added);
         prefs.edit().putStringSet("pkgs", new LinkedHashSet<>(pkgs)).apply();
         if (BroadcastCtrl.wanted(this)) BroadcastCtrl.apply(this);
     }
