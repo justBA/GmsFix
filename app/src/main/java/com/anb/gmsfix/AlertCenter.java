@@ -37,10 +37,10 @@ import java.util.regex.Pattern;
 final class AlertCenter {
 
     enum Type {
-        LOST("Mất thông báo", "App bị dừng nên GMS bỏ tin", 11),
-        DELAYED("Thông báo bị trễ", "Tin ưu tiên cao trễ hơn 2 phút", 12),
-        SETTINGS("Cài đặt bị đổi", "HyperOS đổi lại quyền chạy nền", 13),
-        NOTIF_OFF("App tắt thông báo", "App trong danh sách bị tắt thông báo", 14);
+        LOST(I18n.t("Mất thông báo"), I18n.t("App bị dừng nên GMS bỏ tin"), 11),
+        DELAYED(I18n.t("Thông báo bị trễ"), I18n.t("Tin ưu tiên cao trễ hơn 2 phút"), 12),
+        SETTINGS(I18n.t("Cài đặt bị đổi"), I18n.t("HyperOS đổi lại quyền chạy nền"), 13),
+        NOTIF_OFF(I18n.t("App tắt thông báo"), I18n.t("App trong danh sách bị tắt thông báo"), 14);
 
         final String title, desc;
         final int notifId;
@@ -115,8 +115,8 @@ final class AlertCenter {
             long ms = Long.parseLong(m.group(5));
             if (ms < DELAY_THRESHOLD_MS || !wanted.contains(pkg) || !seen.add(id)) continue;
             // giờ trong phần chẩn đoán của GMS là UTC → đổi sang giờ máy
-            String line = HealthCheck.label(pm, pkg) + ": trễ " + (ms / 60000) + " phút (nguyên nhân "
-                    + cause(m.group(6)) + ", lúc " + utcToLocal(m.group(1)) + ")";
+            String line = HealthCheck.label(pm, pkg) + I18n.t(": trễ ") + (ms / 60000) + I18n.t(" phút (nguyên nhân ")
+                    + cause(m.group(6)) + I18n.t(", lúc ") + utcToLocal(m.group(1)) + ")";
             if ("HIGH".equals(m.group(4))) delayed.add(line);
             else if (ms > NORMAL_DELAY_THRESHOLD_MS) delayedQuiet.add(line);
         }
@@ -132,23 +132,23 @@ final class AlertCenter {
                 sb.append("• ").append(HealthCheck.label(pm, e.getKey())).append(": ")
                         .append(e.getValue().size()).append(" tin (").append(localFmt(e.getValue().get(0))).append(")\n");
             }
-            raise(ctx, Type.LOST, lost.size() + " app bị mất thông báo", sb.toString().trim()
-                    + "\nMở app đó lên 1 lần, hoặc Fix ngay để bỏ trạng thái dừng.");
+            raise(ctx, Type.LOST, lost.size() + I18n.t(" app bị mất thông báo"), sb.toString().trim()
+                    + I18n.t("\nMở app đó lên 1 lần, hoặc Fix ngay để bỏ trạng thái dừng."));
         }
         if (!delayed.isEmpty()) {
-            raise(ctx, Type.DELAYED, delayed.size() + " tin ưu tiên cao đến trễ", "• " + String.join("\n• ", delayed)
-                    + "\nTin ưu tiên cao thường là thông báo hiển thị (tin nhắn, OTP…).");
+            raise(ctx, Type.DELAYED, delayed.size() + I18n.t(" tin ưu tiên cao đến trễ"), "• " + String.join("\n• ", delayed)
+                    + I18n.t("\nTin ưu tiên cao thường là thông báo hiển thị (tin nhắn, OTP…)."));
         }
         for (String q : delayedQuiet) {
             int c = q.indexOf(": ");
-            addHistory(ctx, Type.DELAYED, (c > 0 ? q.substring(0, c) : "?") + " — tin thường, có thể là tin ngầm ⏐ " + q);
+            addHistory(ctx, Type.DELAYED, (c > 0 ? q.substring(0, c) : "?") + I18n.t(" — tin thường, có thể là tin ngầm ⏐ ") + q);
         }
     }
 
     private static String cause(String c) {
         switch (c) {
-            case "APP_STOPPED_OR_CRASHED": return "app bị dừng";
-            case "NONE": return "mất kết nối/máy chủ";
+            case "APP_STOPPED_OR_CRASHED": return I18n.t("app bị dừng");
+            case "NONE": return I18n.t("mất kết nối/máy chủ");
             default: return c.toLowerCase(Locale.ROOT).replace('_', ' ');
         }
     }
@@ -167,9 +167,9 @@ final class AlertCenter {
             if (!other.isEmpty()) settings.append("• ").append(label).append(": ").append(String.join(", ", other)).append('\n');
         }
         onState(ctx, Type.SETTINGS, settings.toString().trim(),
-                "Có app bị HyperOS đổi cài đặt", "\nBấm Fix ngay để áp dụng lại (cần Shizuku).");
+                I18n.t("Có app bị HyperOS đổi cài đặt"), I18n.t("\nBấm Fix ngay để áp dụng lại (cần Shizuku)."));
         onState(ctx, Type.NOTIF_OFF, notif.toString().trim(),
-                "Có app đang tắt thông báo", "\nTự bật trong Cài đặt → Thông báo nếu muốn nhận.");
+                I18n.t("Có app đang tắt thông báo"), I18n.t("\nTự bật trong Cài đặt → Thông báo nếu muốn nhận."));
     }
 
     /** Cảnh báo theo trạng thái: chỉ báo khi nội dung thay đổi và không rỗng. */
@@ -195,7 +195,7 @@ final class AlertCenter {
                 != PackageManager.PERMISSION_GRANTED) return;
         NotificationManager nm = ctx.getSystemService(NotificationManager.class);
         if (Build.VERSION.SDK_INT >= 26) {
-            nm.createNotificationChannel(new NotificationChannel(CHANNEL, "Cảnh báo thông báo",
+            nm.createNotificationChannel(new NotificationChannel(CHANNEL, I18n.t("Cảnh báo thông báo"),
                     NotificationManager.IMPORTANCE_DEFAULT));
         }
         PendingIntent pi = PendingIntent.getActivity(ctx, t.notifId,
@@ -229,7 +229,7 @@ final class AlertCenter {
         List<String> h = new ArrayList<>(Arrays.asList(p.getString("alertHist", "").split("\n")));
         h.removeIf(String::isEmpty);
         h.add(0, new SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(new Date())
-                + " • " + t.title + ": " + title + (enabled(ctx, t) ? "" : " (đã tắt báo)"));
+                + " • " + t.title + ": " + title + (enabled(ctx, t) ? "" : I18n.t(" (đã tắt báo)")));
         if (h.size() > HISTORY_MAX) h = h.subList(0, HISTORY_MAX);
         p.edit().putString("alertHist", String.join("\n", h)).apply();
     }

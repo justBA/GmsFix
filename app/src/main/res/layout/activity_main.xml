@@ -24,7 +24,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="-12dp"
-                android:contentDescription="Quay lại"
+                android:contentDescription="@string/back"
                 app:icon="@drawable/ic_back" />
 
             <LinearLayout
@@ -76,7 +76,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Trạng thái"
+                        android:text="@string/status"
                         android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                     <com.google.android.material.button.MaterialButton
@@ -84,7 +84,7 @@
                         style="?attr/materialIconButtonStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="Làm mới"
+                        android:contentDescription="@string/refresh"
                         app:icon="@drawable/ic_refresh" />
                 </LinearLayout>
 
@@ -125,7 +125,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Ứng dụng áp dụng"
+                        android:text="@string/apps_applied"
                         android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                     <com.google.android.material.button.MaterialButton
@@ -133,7 +133,7 @@
                         style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Chọn app"
+                        android:text="@string/pick_apps"
                         app:icon="@drawable/ic_add" />
                 </LinearLayout>
 
@@ -143,7 +143,7 @@
                     android:layout_marginTop="2dp"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="⚡ cam = luôn chạy nền. ⚡ xám = chỉ khi có tin: được đóng băng cho đỡ pin, có tin FCM thì mở băng. Bấm ⚡ để đổi (mở cài đặt pin của app). Nhấn giữ app để xoá."
+                    android:text="@string/tier_hint"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -160,7 +160,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:padding="16dp"
-                    android:text="Chưa chọn app nào"
+                    android:text="@string/no_apps"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:visibility="gone" />
             </LinearLayout>
@@ -180,7 +180,7 @@
             android:layout_width="match_parent"
             android:layout_height="68dp"
             android:layout_marginTop="6dp"
-            android:text="Fix ngay"
+            android:text="@string/fix_now"
             android:textSize="18sp"
             app:cornerRadius="20dp"
             app:icon="@drawable/ic_bolt"
@@ -215,7 +215,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Kết quả"
+                        android:text="@string/result"
                         android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                     <TextView
@@ -246,7 +246,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
                     android:layout_marginEnd="8dp"
-                    android:text="Xem log đầy đủ" />
+                    android:text="@string/full_log" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -271,7 +271,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Tùy chọn"
+                    android:text="@string/options"
                     android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                 <LinearLayout
@@ -295,14 +295,14 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tự tắt Developer sau khi fix"
+                            android:text="@string/auto_dev_off"
                             android:textAppearance="?attr/textAppearanceBodyLarge" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
-                            android:text="Để app ngân hàng, VNeID chạy bình thường"
+                            android:text="@string/auto_dev_off_sub"
                             android:textAppearance="?attr/textAppearanceBodySmall"
                             android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
@@ -334,14 +334,14 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tự fix lại sau khi khởi động"
+                            android:text="@string/boot_fix"
                             android:textAppearance="?attr/textAppearanceBodyLarge" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
-                            android:text="Không cần Shizuku, chỉ nhắc nếu không làm được"
+                            android:text="@string/boot_fix_sub"
                             android:textAppearance="?attr/textAppearanceBodySmall"
                             android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
@@ -379,14 +379,14 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Đánh thức GMS định kỳ"
+                            android:text="@string/wake_gms"
                             android:textAppearance="?attr/textAppearanceBodyLarge" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
-                            android:text="Khi dùng pin và tắt màn hình"
+                            android:text="@string/wake_gms_sub"
                             android:textAppearance="?attr/textAppearanceBodySmall"
                             android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
@@ -448,14 +448,14 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Cho FCM đánh thức app bị đóng băng"
+                            android:text="@string/bc_title"
                             android:textAppearance="?attr/textAppearanceBodyLarge" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
-                            android:text="Tin FCM đến ngay cả ban đêm"
+                            android:text="@string/bc_sub"
                             android:textAppearance="?attr/textAppearanceBodySmall"
                             android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
@@ -487,14 +487,14 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tự ghi lại nếu bị đổi"
+                            android:text="@string/bc_guard"
                             android:textAppearance="?attr/textAppearanceBodyLarge" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
-                            android:text="Khi HyperOS hoặc cloud đổi lại"
+                            android:text="@string/bc_guard_sub"
                             android:textAppearance="?attr/textAppearanceBodySmall"
                             android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
@@ -526,7 +526,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Mọi app có FCM"
+                            android:text="@string/bc_all"
                             android:textAppearance="?attr/textAppearanceBodyLarge" />
 
                         <TextView
@@ -534,7 +534,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
-                            android:text="Không chỉ app trong danh sách"
+                            android:text="@string/bc_all_sub"
                             android:textAppearance="?attr/textAppearanceBodySmall"
                             android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
@@ -586,7 +586,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Nới deep doze"
+                                android:text="@string/doze_title"
                                 android:textAppearance="?attr/textAppearanceBodyLarge" />
 
                             <ImageView
@@ -595,7 +595,7 @@
                                 android:layout_height="32dp"
                                 android:layout_marginStart="2dp"
                                 android:background="?attr/selectableItemBackgroundBorderless"
-                                android:contentDescription="Giải thích"
+                                android:contentDescription="@string/explain"
                                 android:padding="7dp"
                                 android:src="@drawable/ic_info_outline"
                                 app:tint="?attr/colorOnSurfaceVariant" />
@@ -656,7 +656,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Ban đêm (sleep mode)"
+                                android:text="@string/night_title"
                                 android:textAppearance="?attr/textAppearanceBodyLarge" />
 
                             <ImageView
@@ -665,7 +665,7 @@
                                 android:layout_height="32dp"
                                 android:layout_marginStart="2dp"
                                 android:background="?attr/selectableItemBackgroundBorderless"
-                                android:contentDescription="Giải thích"
+                                android:contentDescription="@string/explain"
                                 android:padding="7dp"
                                 android:src="@drawable/ic_info_outline"
                                 app:tint="?attr/colorOnSurfaceVariant" />
@@ -715,13 +715,13 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Cảnh báo"
+                    android:text="@string/alerts"
                     android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Báo khi app trong danh sách gặp vấn đề"
+                    android:text="@string/alerts_sub"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -748,7 +748,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Gần đây"
+                        android:text="@string/recent"
                         android:textAppearance="?attr/textAppearanceTitleSmall" />
 
                     <com.google.android.material.button.MaterialButton
@@ -794,7 +794,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Thủ công. Bật: bật Developer + Wireless debugging rồi mở Shizuku. Tắt: tắt hết debugging (Shizuku sẽ dừng)."
+                    android:text="@string/dev_desc"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -811,7 +811,7 @@
                         android:layout_height="56dp"
                         android:layout_marginEnd="8dp"
                         android:layout_weight="1.4"
-                        android:text="Bật + mở Shizuku"
+                        android:text="@string/dev_on"
                         app:icon="@drawable/ic_code" />
 
                     <com.google.android.material.button.MaterialButton
@@ -820,7 +820,7 @@
                         android:layout_width="0dp"
                         android:layout_height="56dp"
                         android:layout_weight="1"
-                        android:text="Tắt"
+                        android:text="@string/off"
                         android:textColor="@color/err"
                         app:icon="@drawable/ic_power"
                         app:iconTint="@color/err"

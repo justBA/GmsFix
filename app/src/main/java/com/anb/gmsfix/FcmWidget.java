@@ -48,7 +48,7 @@ public class FcmWidget extends AppWidgetProvider {
 
         RemoteViews v = new RemoteViews(ctx.getPackageName(), R.layout.widget_fcm);
         if (status == null) {
-            v.setTextViewText(R.id.wStatus, "Đang đọc…");
+            v.setTextViewText(R.id.wStatus, I18n.t("Đang đọc…"));
             v.setInt(R.id.wDot, "setColorFilter", ContextCompat.getColor(ctx, R.color.neutral));
         } else {
             v.setTextViewText(R.id.wStatus, status.label());
@@ -58,6 +58,7 @@ public class FcmWidget extends AppWidgetProvider {
         }
 
         int flags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+        v.setTextViewText(R.id.wFix, I18n.isEn() ? "⚡ Fix now" : "⚡ Fix ngay");
         v.setOnClickPendingIntent(R.id.wRefresh, PendingIntent.getBroadcast(ctx, 0,
                 new Intent(ctx, FcmWidget.class).setAction(ACTION_REFRESH), flags));
         v.setOnClickPendingIntent(R.id.wFix, PendingIntent.getActivity(ctx, 1,

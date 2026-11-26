@@ -19,9 +19,9 @@ final class Steps {
     // Thêm package vào 1 setting dạng list, không trùng (so sánh bỏ dấu cách), in "pkg: đã có/đã thêm".
     private static final String ADD_FN =
             "add_to() { v=\"$(settings $1 get system \"$2\")\"; "
-                    + "case \",$(echo \"$v\" | tr -d ' '),\" in *\",$4,\"*) echo \"$4: đã có\" ;; "
+                    + I18n.t("case \",$(echo \"$v\" | tr -d ' '),\" in *\",$4,\"*) echo \"$4: đã có\" ;; ")
                     + "*) if [ -z \"$v\" ] || [ \"$v\" = null ]; then n=\"$4\"; else n=\"$v$3$4\"; fi; "
-                    + "settings $1 put system \"$2\" \"$n\" && echo \"$4: đã thêm\" ;; esac; }\n"
+                    + I18n.t("settings $1 put system \"$2\" \"$n\" && echo \"$4: đã thêm\" ;; esac; }\n")
                     + "rc=0\n";
 
     static final class Step {
@@ -65,14 +65,14 @@ final class Steps {
         for (String p : withSelf) {
             boolean keep = alwaysOn.contains(p) || p.equals(selfPkg);
             s.append("case \"$m\" in *\",").append(p).append(",\"*) ")
-                    .append(keep ? "echo '" + p + ": luôn chạy nền';; *) echo '" + p + ": THIẾU'; rc=1;; esac\n"
-                            : "echo '⚠ " + p + ": cài đặt pin đang No restrictions → đổi sang Battery saver';; "
-                            + "*) echo '" + p + ": chỉ khi có tin';; esac\n");
+                    .append(keep ? "echo '" + p + I18n.t(": luôn chạy nền';; *) echo '") + p + I18n.t(": THIẾU'; rc=1;; esac\n")
+                            : "echo '⚠ " + p + I18n.t(": cài đặt pin đang No restrictions → đổi sang Battery saver';; ")
+                            + "*) echo '" + p + I18n.t(": chỉ khi có tin';; esac\n"));
         }
-        steps.add(new Step("Xiaomi No Restrictions (2 mức)", s.append("exit $rc").toString(), false));
+        steps.add(new Step(I18n.t("Xiaomi No Restrictions (2 mức)"), s.append("exit $rc").toString(), false));
 
         if (pkgs.contains(GMS)) {
-            steps.add(new Step("Tắt Xiaomi GMS freezer", "dumpsys greezer IM GMS disable", false));
+            steps.add(new Step(I18n.t("Tắt Xiaomi GMS freezer"), "dumpsys greezer IM GMS disable", false));
         }
 
         steps.add(new Step("Greezer / Aurogon allowlist",
@@ -89,18 +89,18 @@ final class Steps {
         if (!always.isEmpty()) {
             s = new StringBuilder(ADD_FN);
             for (String p : always) s.append("add_to '' cloud_lowlatency_whitelist ',' ").append(p).append(" || rc=1\n");
-            steps.add(new Step("Low-latency (luôn chạy nền)", s.append("exit $rc").toString(), false));
+            steps.add(new Step(I18n.t("Low-latency (luôn chạy nền)"), s.append("exit $rc").toString(), false));
         }
 
         StringBuilder dz = new StringBuilder("rc=0\nwl=\"$(dumpsys deviceidle whitelist)\"\n");
         for (String p : alwaysSelf) dz.append("dumpsys deviceidle whitelist +").append(p).append(" >/dev/null && echo '")
-                .append(p).append(": miễn Doze' || rc=1\n");
+                .append(p).append(I18n.t(": miễn Doze' || rc=1\n"));
         // gỡ app "Chỉ khi có tin" khỏi danh sách người dùng (do GMS Fix/PowerKeeper thêm trước đây)
         for (String p : fcmOnly) dz.append("case \"$wl\" in *\"user,").append(p).append(",\"*) dumpsys deviceidle whitelist -")
-                .append(p).append(" >/dev/null && echo '").append(p).append(": bỏ miễn Doze (chỉ khi có tin)';; esac\n");
-        steps.add(new Step("Doze whitelist (luôn chạy nền)", dz.append("exit $rc").toString(), false));
+                .append(p).append(" >/dev/null && echo '").append(p).append(I18n.t(": bỏ miễn Doze (chỉ khi có tin)';; esac\n"));
+        steps.add(new Step(I18n.t("Doze whitelist (luôn chạy nền)"), dz.append("exit $rc").toString(), false));
 
-        steps.add(new Step("Cho phép chạy nền",
+        steps.add(new Step(I18n.t("Cho phép chạy nền"),
                 forEach(withSelf, "cmd appops set %1$s RUN_ANY_IN_BACKGROUND allow && "
                         + "cmd appops set %1$s RUN_IN_BACKGROUND allow && echo \"%1$s: allow\""), false));
 
@@ -110,28 +110,28 @@ final class Steps {
             nd.append("u=$(cmd package list packages -U ").append(p).append(" | grep '^package:").append(p)
                     .append(" uid:' | sed 's/.*uid://; s/,.*//'); ")
                     .append("if [ -n \"$u\" ]; then cmd netpolicy add restrict-background-whitelist $u && echo '")
-                    .append(p).append(": cho phép' || rc=1; fi\n");
+                    .append(p).append(I18n.t(": cho phép' || rc=1; fi\n"));
         }
-        steps.add(new Step("Cho dùng dữ liệu nền", nd.append("exit $rc").toString(), true));
+        steps.add(new Step(I18n.t("Cho dùng dữ liệu nền"), nd.append("exit $rc").toString(), true));
 
         if (!always.isEmpty()) {
-            steps.add(new Step("Standby bucket = active (luôn chạy nền)",
+            steps.add(new Step(I18n.t("Standby bucket = active (luôn chạy nền)"),
                     forEach(always, "am set-standby-bucket %1$s active && echo \"%1$s: active\""), true));
         }
 
         List<String> autostart = new ArrayList<>(pkgs);
         autostart.add(selfPkg); // để nhận BOOT_COMPLETED trên MIUI/HyperOS
-        steps.add(new Step("MIUI tự khởi chạy",
+        steps.add(new Step(I18n.t("MIUI tự khởi chạy"),
                 forEach(autostart, "cmd appops set %1$s 10008 allow && echo \"%1$s: allow\""
                         // 10053 = trạng thái công tắc Tự khởi chạy; đặt cùng 10008 để Bảo mật không đặt lại theo công tắc
                         + " && { cmd appops set %1$s 10053 allow 2>/dev/null || true; }"), true));
 
-        steps.add(new Step("Cấp quyền cho GMS Fix",
+        steps.add(new Step(I18n.t("Cấp quyền cho GMS Fix"),
                 "pm grant " + selfPkg + " " + Manifest.permission.WRITE_SECURE_SETTINGS + " && echo 'WRITE_SECURE_SETTINGS' && "
                         + "pm grant " + selfPkg + " " + Manifest.permission.DUMP + " && echo 'DUMP' && "
                         + "pm grant " + selfPkg + " " + Manifest.permission.PACKAGE_USAGE_STATS + " && "
-                        + "cmd appops set " + selfPkg + " GET_USAGE_STATS allow && echo 'Usage access (đọc FCM không cần Shizuku)' && "
-                        + "cmd appops set " + selfPkg + " SCHEDULE_EXACT_ALARM allow && echo 'Exact alarm (đánh thức GMS)'",
+                        + "cmd appops set " + selfPkg + I18n.t(" GET_USAGE_STATS allow && echo 'Usage access (đọc FCM không cần Shizuku)' && ")
+                        + "cmd appops set " + selfPkg + I18n.t(" SCHEDULE_EXACT_ALARM allow && echo 'Exact alarm (đánh thức GMS)'"),
                 false));
 
         // Không force-stop: mọi thiết lập ở trên có hiệu lực ngay, còn force-stop để lại cờ "stopped"
@@ -143,16 +143,16 @@ final class Steps {
         for (String p : unstopAlso) if (p.matches("[A-Za-z0-9_.]+")) unstop.add(p);
         for (String p : unstop) {
             us.append("if isstop ").append(p).append("; then cmd package unstop ").append(p).append(" >/dev/null 2>&1; ")
-                    .append("if isstop ").append(p).append("; then echo '").append(p).append(": vẫn bị dừng — mở app 1 lần'; rc=1; ")
-                    .append("else echo '").append(p).append(": đã bỏ trạng thái dừng'; fi; fi\n");
+                    .append("if isstop ").append(p).append("; then echo '").append(p).append(I18n.t(": vẫn bị dừng — mở app 1 lần'; rc=1; "))
+                    .append("else echo '").append(p).append(I18n.t(": đã bỏ trạng thái dừng'; fi; fi\n"));
         }
-        us.append("[ $rc = 0 ] && echo 'Không app nào bị dừng'\nexit $rc");
-        steps.add(new Step("Bỏ trạng thái dừng (stopped)", us.toString(), false));
+        us.append(I18n.t("[ $rc = 0 ] && echo 'Không app nào bị dừng'\nexit $rc"));
+        steps.add(new Step(I18n.t("Bỏ trạng thái dừng (stopped)"), us.toString(), false));
 
         // Ban đêm (sleep mode): không cắt mạng + alarm của GMS/GMS Fix được đi qua (SleepGuard)
-        if (nightScript != null) steps.add(new Step("Ban đêm (sleep mode)", nightScript, false));
+        if (nightScript != null) steps.add(new Step(I18n.t("Ban đêm (sleep mode)"), nightScript, false));
 
-        steps.add(new Step("Kiểm tra lại", verifyScript(pkgs, alwaysOn), false));
+        steps.add(new Step(I18n.t("Kiểm tra lại"), verifyScript(pkgs, alwaysOn), false));
         return steps;
     }
 
@@ -174,7 +174,7 @@ final class Steps {
             if (alwaysOn.contains(p)) s.append("case \"$c\" in *\",").append(p).append(",\"*) ok '").append(p).append(": low-latency';; *) ko '").append(p).append(": low-latency';; esac\n");
             if (alwaysOn.contains(p)) s.append("case \"$w\" in *\",").append(p).append(",\"*) ok '").append(p).append(": Doze whitelist';; *) ko '").append(p).append(": Doze whitelist';; esac\n");
             s.append("cmd appops get ").append(p).append(" RUN_ANY_IN_BACKGROUND | grep -q deny && ko '").append(p)
-                    .append(": chạy nền' || ok '").append(p).append(": chạy nền'\n");
+                    .append(I18n.t(": chạy nền' || ok '")).append(p).append(I18n.t(": chạy nền'\n"));
         }
         return s.append("exit $rc").toString();
     }
@@ -195,7 +195,7 @@ final class Steps {
             }
         }
         if (pass + fail > 0) {
-            return fail == 0 ? "Tất cả " + pass + " mục đều đạt" : fail + "/" + (pass + fail) + " mục chưa đạt • " + firstFail;
+            return fail == 0 ? I18n.t("Tất cả ") + pass + I18n.t(" mục đều đạt") : fail + "/" + (pass + fail) + I18n.t(" mục chưa đạt • ") + firstFail;
         }
 
         if (failed) {
@@ -203,6 +203,6 @@ final class Steps {
             return lines[lines.length - 1].trim();
         }
         if (lines.length <= 2) return out.replace("\n", " • ");
-        return lines.length + " dòng • " + lines[lines.length - 1].trim();
+        return lines.length + I18n.t(" dòng • ") + lines[lines.length - 1].trim();
     }
 }

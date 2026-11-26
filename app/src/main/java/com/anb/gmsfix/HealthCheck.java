@@ -56,15 +56,15 @@ final class HealthCheck {
         }
     }
 
-    static final String STOPPED = "đang bị dừng (mất tin FCM)";
-    static final String NO_AUTOSTART = "tắt Tự khởi chạy";
-    static final String NO_BG = "bị hạn chế chạy nền";
-    static final String NO_DOZE = "không có trong Doze whitelist";
-    static final String NO_RESTRICT = "mất No Restrictions";
+    static final String STOPPED = I18n.t("đang bị dừng (mất tin FCM)");
+    static final String NO_AUTOSTART = I18n.t("tắt Tự khởi chạy");
+    static final String NO_BG = I18n.t("bị hạn chế chạy nền");
+    static final String NO_DOZE = I18n.t("không có trong Doze whitelist");
+    static final String NO_RESTRICT = I18n.t("mất No Restrictions");
     /** App "Chỉ khi có tin" nhưng cài đặt pin vẫn "No restrictions" → không được đóng băng (tốn pin). */
-    static final String BATTERY_NR = "cài đặt pin đang No restrictions";
-    static final String NO_BG_DATA = "chưa được dùng dữ liệu nền";
-    static final String NOTIF_OFF = "thông báo đang bị tắt";
+    static final String BATTERY_NR = I18n.t("cài đặt pin đang No restrictions");
+    static final String NO_BG_DATA = I18n.t("chưa được dùng dữ liệu nền");
+    static final String NOTIF_OFF = I18n.t("thông báo đang bị tắt");
 
     private static final Pattern NETPOLICY_UID = Pattern.compile("UID=(\\d+) policy=\\d+ \\(ALLOW_METERED_BACKGROUND\\)");
     private static final Pattern NOTIF_NONE = Pattern.compile("AppSettings: ([\\w.]+) \\(\\d+\\) importance=NONE");
@@ -106,7 +106,7 @@ final class HealthCheck {
                 != PackageManager.PERMISSION_GRANTED) return;
         android.app.NotificationManager nm = ctx.getSystemService(android.app.NotificationManager.class);
         if (android.os.Build.VERSION.SDK_INT >= 26) {
-            nm.createNotificationChannel(new android.app.NotificationChannel(CHANNEL, "Cảnh báo cài đặt bị đổi",
+            nm.createNotificationChannel(new android.app.NotificationChannel(CHANNEL, I18n.t("Cảnh báo cài đặt bị đổi"),
                     android.app.NotificationManager.IMPORTANCE_DEFAULT));
         }
         android.app.PendingIntent pi = android.app.PendingIntent.getActivity(ctx, 3,
@@ -118,7 +118,7 @@ final class HealthCheck {
         androidx.core.app.NotificationManagerCompat.from(ctx).notify(NOTIF_ID,
                 new androidx.core.app.NotificationCompat.Builder(ctx, CHANNEL)
                         .setSmallIcon(R.drawable.ic_warning)
-                        .setContentTitle(r.count() + " app có thể bị mất thông báo")
+                        .setContentTitle(r.count() + I18n.t(" app có thể bị mất thông báo"))
                         .setContentText(text.replace("\n", " "))
                         .setStyle(new androidx.core.app.NotificationCompat.BigTextStyle().bigText(text))
                         .setContentIntent(pi)

@@ -34,8 +34,8 @@ final class SleepGuard {
     static final Set<String> ROM_DEFAULT_ALARM =
             new LinkedHashSet<>(Arrays.asList("com.tencent.mm", "com.tencent.mobileqq", "com.xtc.watch"));
 
-    static final String ISSUE_NET = "Nighttime mode đang bật (ngắt 4G + Wi-Fi ban đêm)";
-    static final String ISSUE_ALARM = "thiếu trong danh sách alarm ban đêm";
+    static final String ISSUE_NET = I18n.t("Nighttime mode đang bật (ngắt 4G + Wi-Fi ban đêm)");
+    static final String ISSUE_ALARM = I18n.t("thiếu trong danh sách alarm ban đêm");
 
     private SleepGuard() {}
 
@@ -119,9 +119,9 @@ final class SleepGuard {
         Set<String> list = alarmList(ctx);
         list.addAll(alarmPkgs(ctx));
         return "rc=0\n"
-                + "settings put secure " + NIGHT_KEY + " 0 && echo 'Ban đêm: tắt Nighttime mode (không ngắt 4G/Wi-Fi)' || rc=1\n"
+                + "settings put secure " + NIGHT_KEY + I18n.t(" 0 && echo 'Ban đêm: tắt Nighttime mode (không ngắt 4G/Wi-Fi)' || rc=1\n")
                 + "settings put system " + ALARM_KEY + " " + q(String.join(",", list))
-                + " && echo 'Ban đêm: alarm của GMS + GMS Fix được đi qua' || rc=1\n"
+                + I18n.t(" && echo 'Ban đêm: alarm của GMS + GMS Fix được đi qua' || rc=1\n")
                 + "exit $rc";
     }
 
@@ -142,7 +142,7 @@ final class SleepGuard {
         if (on ? alarmOk(ctx) : !alarmList(ctx).removeAll(alarmPkgs(ctx))) return null; // alarm đã đúng
         Shell.waitShizuku(2000);
         Shell.Mode mode = Shell.available(false);
-        if (mode == null) return "Nighttime mode đã " + (on ? "tắt" : "bật") + "; danh sách alarm cần Shizuku — bấm Fix ngay";
+        if (mode == null) return I18n.t("Nighttime mode đã ") + (on ? I18n.t("tắt") : I18n.t("bật")) + I18n.t("; danh sách alarm cần Shizuku — bấm Fix ngay");
         try {
             Shell.Result r = Shell.exec(mode, on ? applyScript(ctx) : restoreScript(ctx));
             return r.code == 0 ? null : r.out.trim();
@@ -153,7 +153,7 @@ final class SleepGuard {
 
     /** Mô tả ngắn giá trị thật. */
     static String status(Context ctx) {
-        return (netOk(ctx) ? "Nighttime mode: tắt" : "Nighttime mode: BẬT (ngắt mạng)")
-                + " • alarm: " + (alarmOk(ctx) ? "có GMS + GMS Fix" : "chưa có GMS/GMS Fix");
+        return (netOk(ctx) ? I18n.t("Nighttime mode: tắt") : I18n.t("Nighttime mode: BẬT (ngắt mạng)"))
+                + " • alarm: " + (alarmOk(ctx) ? I18n.t("có GMS + GMS Fix") : I18n.t("chưa có GMS/GMS Fix"));
     }
 }

@@ -165,7 +165,7 @@ final class NoRestrictGuard {
         Shell.waitShizuku(3000); // binder Shizuku có thể chưa tới ngay sau khi app khởi động
         Shell.Mode mode = Shell.available(false);
         if (mode == null) {
-            p.edit().putString("nrWriteErr", "Cần Shizuku hoặc root để cập nhật " + (add.size() + rm.size()) + " app").apply();
+            p.edit().putString("nrWriteErr", I18n.t("Cần Shizuku hoặc root để cập nhật ") + (add.size() + rm.size()) + " app").apply();
             return NEED_SHELL;
         }
         have.removeAll(rm);
@@ -183,7 +183,7 @@ final class NoRestrictGuard {
         boolean removed = true;
         for (String r : rm) if (after.contains(r)) removed = false;
         if (!after.containsAll(add) || !removed) {
-            p.edit().putString("nrWriteErr", "Ghi xong nhưng đọc lại vẫn thiếu (ROM chặn?)").apply();
+            p.edit().putString("nrWriteErr", I18n.t("Ghi xong nhưng đọc lại vẫn thiếu (ROM chặn?)")).apply();
             return -1;
         }
         p.edit().remove("nrWriteErr").putString("nrLastMode", mode.name())

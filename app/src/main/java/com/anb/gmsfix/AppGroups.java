@@ -14,12 +14,12 @@ import java.util.regex.Pattern;
 final class AppGroups {
 
     enum Group {
-        SYSTEM("Hệ thống / Google"),
-        WEAR("Đồng hồ & thiết bị đeo"),
-        BANK("Ngân hàng & ví"),
-        CHAT("Chat & mạng xã hội"),
+        SYSTEM(I18n.t("Hệ thống / Google")),
+        WEAR(I18n.t("Đồng hồ & thiết bị đeo")),
+        BANK(I18n.t("Ngân hàng & ví")),
+        CHAT(I18n.t("Chat & mạng xã hội")),
         MAIL("Email"),
-        OTHER("Khác");
+        OTHER(I18n.t("Khác"));
 
         final String title;
 

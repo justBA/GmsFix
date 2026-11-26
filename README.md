@@ -1,3 +1,5 @@
+🇻🇳 Tiếng Việt | [🇬🇧 English](README.en.md)
+
 # GMS Fix
 
 App Android giúp **thông báo (FCM) không bị HyperOS chặn**: không bị mất tin, không bị trễ, không bị ngắt kết nối. Viết cho Xiaomi chạy **HyperOS ROM CN** và **không root**.
@@ -6,7 +8,64 @@ App Android giúp **thông báo (FCM) không bị HyperOS chặn**: không bị 
 - Máy thử nghiệm: Xiaomi `popsicle` (2509FPN0BC), HyperOS OS4.0 CN, Android 17, không root
 - Ràng buộc: bình thường **Developer options phải tắt** (để app ngân hàng và VNeID chạy được). Shizuku chỉ bật khi cần bấm **Fix ngay**.
 
+- Ngôn ngữ: app có **Tiếng Việt / English / theo hệ thống**, chọn ngôn ngữ trong app.
+
 > ☕ App giúp được bạn? [Mời mình ly cà phê](#-mời-mình-ly-cà-phê) nha!
+
+---
+
+## Chuẩn bị (lần đầu trên máy mới)
+
+Làm 1 lần. Sau đó Developer options tắt lại được, app vẫn chạy.
+
+**1. Cài app**
+Tải `GmsFix-3.0.2.apk` ở [Releases](https://github.com/justBA/GmsFix/releases/latest) rồi cài. Lần mở đầu tiên, cho phép **Thông báo** (cảnh báo mất/trễ tin cần quyền này).
+
+**2. Bật Developer options**
+*Cài đặt → Giới thiệu điện thoại* → chạm **Phiên bản OS** 7 lần. Sau đó vào *Cài đặt → Cài đặt bổ sung → Tùy chọn nhà phát triển*, bật:
+- **USB debugging** (Gỡ lỗi USB)
+- **Install via USB** (Cài đặt qua USB)
+- **USB debugging (Security settings)**: Xiaomi bắt buộc mục này thì mới cấp được `WRITE_SECURE_SETTINGS`. Mục này thường đòi đăng nhập Mi account và có SIM.
+- **Wireless debugging** (Gỡ lỗi không dây), nếu dùng Shizuku không cần máy tính.
+
+**3. Cài và khởi động Shizuku**
+- Tải Shizuku ở [GitHub](https://github.com/RikkaApps/Shizuku/releases) (máy thử dùng 13.6.0).
+- Mở Shizuku → **Start via Wireless debugging** → ghép nối (pairing) bằng mã trong thông báo, theo hướng dẫn trong Shizuku. Hoặc nếu có máy tính, chạy lệnh mà Shizuku hiện ở mục *Start via adb*, ví dụ:
+  ```bash
+  adb shell 'sh -c "$(pm path moe.shizuku.privileged.api | cut -d: -f2 | sed s/base.apk//)lib/arm64/libshizuku.so"'
+  ```
+- Shizuku **dừng** khi khởi động lại máy hoặc khi tắt Wireless debugging / Developer options. Lần sau bấm Fix, app tự bật Developer, mở Shizuku để bạn bấm Start rồi chạy tiếp.
+
+**4. Bấm *Fix ngay* trong GMS Fix**
+- Shizuku hỏi quyền cho GMS Fix → **Allow**. Trên HyperOS 4 CN, Shizuku không lưu "Allow all the time", nên mỗi lần Fix có thể phải bấm Allow lại.
+- Bước *Cấp quyền cho GMS Fix* của Fix tự cấp các quyền sau. Nếu không dùng Shizuku, chạy bằng adb từ máy tính cũng được:
+  ```bash
+  adb shell pm grant com.anb.gmsfix android.permission.WRITE_SECURE_SETTINGS
+  adb shell pm grant com.anb.gmsfix android.permission.DUMP
+  adb shell pm grant com.anb.gmsfix android.permission.PACKAGE_USAGE_STATS
+  adb shell cmd appops set com.anb.gmsfix GET_USAGE_STATS allow
+  adb shell cmd appops set com.anb.gmsfix SCHEDULE_EXACT_ALARM allow
+  ```
+  | Quyền | Để làm gì |
+  |---|---|
+  | `WRITE_SECURE_SETTINGS` | Ghi `aurogon_enable`, `device_idle_constants`, Nighttime mode; tự bật/tắt Developer options |
+  | `DUMP` | Đọc trạng thái FCM, Greezer, doze; áp dụng lại phần Greezer sau khi khởi động máy |
+  | `PACKAGE_USAGE_STATS` + `GET_USAGE_STATS` | Đọc `dumpsys GcmService` không cần Shizuku |
+  | `SCHEDULE_EXACT_ALARM` | Báo thức "Đánh thức GMS" đúng giờ |
+
+**5. Quyền trong HyperOS cho chính GMS Fix**
+- *Cài đặt → Ứng dụng → GMS Fix → Quyền khác* → bật **Đọc danh sách ứng dụng đã cài**. App cũng tự hỏi khi bấm chọn ứng dụng. Thiếu quyền này thì danh sách chỉ thấy app hệ thống.
+- Bật **Tự khởi chạy** (Autostart) và để cài đặt pin là **No restrictions** cho GMS Fix.
+
+**6. Chọn app và thói quen nên có**
+- Thêm app chat, ngân hàng… vào danh sách, rồi bấm **Fix ngay** lại.
+- **Khoá** app quan trọng trong đa nhiệm (nhấn giữ thẻ → ổ khoá). Đừng vuốt bỏ hay "dọn tất cả": trên ROM này đó là force-stop.
+- Nighttime mode: app tự tắt (tuỳ chọn *Ban đêm*, mặc định bật).
+
+**7. Tắt Developer options lại**
+Xong thì tắt bằng nút trong app (mặc định Fix xong app tự tắt), để app ngân hàng và VNeID chạy được.
+
+Khi Developer options tắt và Shizuku không chạy, **vẫn hoạt động**: đánh thức GMS định kỳ, `aurogon_enable` (FCM mở băng app), nới deep doze, giữ Nighttime mode tắt, cảnh báo, áp dụng lại sau khi khởi động máy. **Cần Shizuku (bấm Fix):** No Restrictions cho Google Play services sau khi khởi động lại, danh sách alarm ban đêm, bỏ trạng thái dừng, tự khởi chạy, Doze whitelist.
 
 ---
 
@@ -155,7 +214,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 - APK được ký bằng debug key của máy build. Cài đè từ máy khác sẽ lỗi chữ ký, phải gỡ app trước.
-- Lần đầu cần chạy **Fix ngay** với Shizuku (hoặc root) để app được cấp `WRITE_SECURE_SETTINGS` và `DUMP`.
+- Lần đầu cần chạy **Fix ngay** với Shizuku (hoặc root) để app được cấp quyền, xem [Chuẩn bị](#chuẩn-bị-lần-đầu-trên-máy-mới).
 
 ## Cấu trúc mã nguồn
 

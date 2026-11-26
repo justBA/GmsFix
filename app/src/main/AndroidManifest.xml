@@ -22,6 +22,8 @@
     <uses-sdk tools:overrideLibrary="rikka.shizuku.api,rikka.shizuku.provider,rikka.shizuku.shared,rikka.shizuku.aidl" />
 
     <application
+        android:name=".App"
+        android:localeConfig="@xml/locales_config"
         android:label="GMS Fix"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
@@ -45,7 +47,7 @@
         <activity android:name=".ThemeActivity" android:exported="false"
             android:excludeFromRecents="true" android:parentActivityName=".HomeActivity" />
 
-        <receiver android:name=".FcmWidget" android:exported="true" android:label="GMS Fix – FCM">
+        <receiver android:name=".FcmWidget" android:exported="true" android:label="@string/widget_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

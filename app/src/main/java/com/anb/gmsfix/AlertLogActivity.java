@@ -61,16 +61,16 @@ public class AlertLogActivity extends AppCompatActivity {
         list.setAdapter(adapter);
 
         ChipGroup chips = findViewById(R.id.filters);
-        addChip(chips, "Tất cả", null, true);
+        addChip(chips, I18n.t("Tất cả"), null, true);
         for (AlertCenter.Type t : AlertCenter.Type.values()) addChip(chips, t.title, t.title, false);
 
         findViewById(R.id.btnClear).setOnClickListener(v -> new MaterialAlertDialogBuilder(this)
-                .setTitle("Xoá toàn bộ lịch sử cảnh báo?")
-                .setPositiveButton("Xoá", (d, w) -> {
+                .setTitle(I18n.t("Xoá toàn bộ lịch sử cảnh báo?"))
+                .setPositiveButton(I18n.t("Xoá"), (d, w) -> {
                     AlertCenter.clearHistory(this);
                     load();
                 })
-                .setNegativeButton("Hủy", null)
+                .setNegativeButton(I18n.t("Hủy"), null)
                 .show());
         load();
     }
@@ -134,7 +134,7 @@ public class AlertLogActivity extends AppCompatActivity {
         shown.clear();
         for (String[] e : all) if (filter == null || e[1].startsWith(filter.split(" ")[0] + " " + filter.split(" ")[1])) shown.add(e);
         adapter.notifyDataSetChanged();
-        ((TextView) findViewById(R.id.count)).setText(shown.size() + " / " + all.size() + " mục");
+        ((TextView) findViewById(R.id.count)).setText(shown.size() + " / " + all.size() + I18n.t(" mục"));
         findViewById(R.id.list).setVisibility(shown.isEmpty() ? View.GONE : View.VISIBLE);
         findViewById(R.id.empty).setVisibility(shown.isEmpty() ? View.VISIBLE : View.GONE);
     }

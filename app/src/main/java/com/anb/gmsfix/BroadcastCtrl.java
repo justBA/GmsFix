@@ -172,12 +172,12 @@ final class BroadcastCtrl {
 
     /** Mô tả ngắn để hiển thị. */
     static String shortValue(String v) {
-        if (v == null) return "(trống)";
+        if (v == null) return I18n.t("(trống)");
         Matcher m = Pattern.compile("broadcastctrl:[^;]*").matcher(v);
         if (!m.find()) return v.length() > 40 ? v.substring(0, 40) + "…" : v;
         String e = m.group();
-        if (e.startsWith("broadcastctrl:false")) return "mọi broadcast";
+        if (e.startsWith("broadcastctrl:false")) return I18n.t("mọi broadcast");
         int n = e.split("#").length - 1;
-        return n > 0 ? "chỉ tin FCM, " + n + " app" : "kiểm soát mặc định";
+        return n > 0 ? I18n.t("chỉ tin FCM, ") + n + " app" : I18n.t("kiểm soát mặc định");
     }
 }

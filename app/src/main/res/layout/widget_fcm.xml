@@ -37,7 +37,7 @@
             android:id="@+id/wRefresh"
             android:layout_width="34dp"
             android:layout_height="34dp"
-            android:contentDescription="Làm mới"
+            android:contentDescription="@string/refresh"
             android:padding="8dp"
             android:src="@drawable/ic_refresh_widget" />
     </LinearLayout>
@@ -63,7 +63,7 @@
             android:layout_marginStart="8dp"
             android:ellipsize="end"
             android:maxLines="2"
-            android:text="Đang đọc…"
+            android:text="@string/reading"
             android:textColor="@color/widget_text"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -94,7 +94,7 @@
         android:background="@drawable/widget_btn"
         android:gravity="center"
         android:maxLines="1"
-        android:text="⚡ Fix ngay"
+        android:text="@string/fix_now_bolt"
         android:textColor="@color/widget_btn_text"
         android:textSize="14sp"
         android:textStyle="bold" />
